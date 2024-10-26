@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.2.1/chartjs-plugin-zoom.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chart-container {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: grab;
+        }
+        .chart-container:active {
+            cursor: grabbing;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .latest-values {
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .value-label {
+            font-weight: bold;
+        }
+        #updateTime {
+            text-align: center;
+            margin: 10px 0;
+            color: #666;
+        }
+        .navigation {
+            margin-bottom: 20px;
+        }
+        .navigation a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .navigation a:hover {
+            text-decoration: underline;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <!-- Navigation Link -->
+        <nav class="navigation">
+            <a href="/">Home</a>
+            <a href="/statistics">Statistics</a>
+        </nav>
+
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="text-center">Sensor Data Dashboard</h2>
+                <p id="updateTime" class="text-center">Last updated: <span></span></p>
+            </div>
+        </div>
+
+        <!-- Latest Values Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Nhiệt độ & Độ ẩm</h5>
+                        <div class="latest-values">
+                            <div><span class="value-label">Nhiệt độ:</span> <span id="latestTemp">--</span>°C</div>
+                            <div><span class="value-label">Độ ẩm:</span> <span id="latestHumid">--</span>%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">pH & Độ dẫn điện</h5>
+                        <div class="latest-values">
+                            <div><span class="value-label">pH:</span> <span id="latestPh">--</span></div>
+                            <div><span class="value-label">Độ dẫn điện:</span> <span id="latestCond">--</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Chỉ số NPK</h5>
+                        <div class="latest-values">
+                            <div><span class="value-label">Nitrogen:</span> <span id="latestN">--</span></div>
+                            <div><span class="value-label">Phosphorus:</span> <span id="latestP">--</span></div>
+                            <div><span class="value-label">Potassium:</span> <span id="latestK">--</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Selection Controls -->
+        <div class="row mb-4">
+            <div class="col">
+                <h5 class="mb-3">Select Data to Display</h5>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="tempCheckBox" checked>
+                    <label class="form-check-label" for="tempCheckBox">Nhiệt độ (°C)</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="humidCheckBox" checked>
+                    <label class="form-check-label" for="humidCheckBox">Độ ẩm (%)</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="phCheckBox" checked>
+                    <label class="form-check-label" for="phCheckBox">pH</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="condCheckBox" checked>
+                    <label class="form-check-label" for="condCheckBox">Độ dẫn điện</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="nCheckBox" checked>
+                    <label class="form-check-label" for="nCheckBox">Nitrogen</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="pCheckBox" checked>
+                    <label class="form-check-label" for="pCheckBox">Phosphorus</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="kCheckBox" checked>
+                    <label class="form-check-label" for="kCheckBox">Potassium</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Range Picker -->
+        <div class="row mb-4">
+            <div class="col">
+                <h5 class="mb-3">Select Date Range</h5>
+                <div class="input-group">
+                    <input type="date" class="form-control" id="fromDate" placeholder="From Date">
+                    <input type="date" class="form-control" id="toDate" placeholder="To Date">
+                    <button class="btn btn-primary" id="updateChartButton">Update Chart</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <canvas id="tempHumidChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <canvas id="phCondChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chart-container">
+                    <canvas id="npkChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2023 Sensor Data Dashboard</p>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        let dataBuffer = {
+            tempHumid: [],
+            phCond: [],
+            npk: []
+        };
+        const maxDataPoints = 15;
+        let lastTimestamp = null;
+
+        // Cấu hình zoom plugin
+        const zoomOptions = {
+            zoom: {
+                wheel: {
+                    enabled: true
+                },
+                pinch: {
+                    enabled: true
+                },
+                mode: 'x',
+                drag: {
+                    enabled: true,
+                    backgroundColor: 'rgba(225,225,225,0.3)',
+                    borderColor: 'rgba(225,225,225)',
+                    borderWidth: 1,
+                    threshold: 2
+                }
+            },
+            pan: {
+                enabled: true,
+                mode: 'x',
+                modifierKey: null,
+                onPanStart: function(chart) {
+                    chart.canvas.style.cursor = 'grabbing';
+                },
+                onPanComplete: function(chart) {
+                    chart.canvas.style.cursor = 'grab';
+                    handlePan(chart);
+                }
+            }
+        };
+
+        // Khởi tạo biểu đồ
+        function initCharts() {
+            // Biểu đồ nhiệt độ và độ ẩm
+            charts.tempHumid = new Chart(document.getElementById('tempHumidChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Nhiệt độ (°C)',
+                            borderColor: '#ff6384',
+                            yAxisID: 'y-temp',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            hidden: !document.getElementById('tempCheckBox').checked
+                        },
+                        {
+                            label: 'Độ ẩm (%)',
+                            borderColor: '#36a2eb',
+                            yAxisID: 'y-humid',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            hidden: !document.getElementById('humidCheckBox').checked
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        'y-temp': {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Nhiệt độ (°C)'
+                            }
+                        },
+                        'y-humid': {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Độ ẩm (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: zoomOptions
+                    }
+                }
+            });
+
+            // Biểu đồ pH và độ dẫn điện
+            charts.phCond = new Chart(document.getElementById('phCondChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'pH',
+                            borderColor: '#4bc0c0',
+                            yAxisID: 'y-ph',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            hidden: !document.getElementById('phCheckBox').checked
+                        },
+                        {
+                            label: 'Độ dẫn điện',
+                            borderColor: '#9966ff',
+                            yAxisID: 'y-cond',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            hidden: !document.getElementById('condCheckBox').checked
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        'y-ph': {
+                            type: 'linear',
+                            position: 'left',
+                            min: 0,
+                            max: 14,
+                            title: {
+                                display: true,
+                                text: 'pH'
+                            }
+                        },
+                        'y-cond': {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Độ dẫn điện'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: zoomOptions
+                    }
+                }
+            });
+
+            // Biểu đồ NPK
+            charts.npk = new Chart(document.getElementById('npkChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Nitrogen',
+                            borderColor: '#ff9f40',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            hidden: !document.getElementById('nCheckBox').checked
+                        },
+                        {
+                            label: 'Phosphorus',
+                            borderColor: '#ffcd56',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            hidden: !document.getElementById('pCheckBox').checked
+                        },
+                        {
+                            label: 'Potassium',
+                            borderColor: '#4bc0c0',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            hidden: !document.getElementById('kCheckBox').checked
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Giá trị'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: zoomOptions
+                    }
+                }
+            });
+        }
+
+        // Xử lý sự kiện pan
+        function handlePan(chart) {
+            const min = chart.scales.x.min;
+            if (min && min < lastTimestamp) {
+                fetchMoreData(min);
+            }
+        }
+
+        // Cập nhật giá trị mới nhất
+        function updateLatestValues(data) {
+            if (data.length > 0) {
+                const latest = data[0];
+                document.getElementById('latestTemp').textContent = latest.temperature.toFixed(1);
+                document.getElementById('latestHumid').textContent = latest.humidity.toFixed(1);
+                document.getElementById('latestPh').textContent = latest.ph.toFixed(2);
+                document.getElementById('latestCond').textContent = latest.conductivity.toFixed(0);
+                document.getElementById('latestN').textContent = latest.nitrogen.toFixed(1);
+                document.getElementById('latestP').textContent = latest.phosphorus.toFixed(1);
+                document.getElementById('latestK').textContent = latest.potassium.toFixed(1);
+                document.querySelector('#updateTime span').textContent = new Date().toLocaleString();
+            }
+        }
+
+        // Cập nhật biểu đồ
+        function updateCharts(data) {
+            // Đảo ngược mảng để hiển thị dữ liệu theo thứ tự thời gian
+            data = data.reverse();
+
+            // Reset data buffers when updating with new date range
+            dataBuffer.tempHumid = [];
+            dataBuffer.phCond = [];
+            dataBuffer.npk = [];
+
+            // Cập nhật biểu đồ nhiệt độ và độ ẩm
+            dataBuffer.tempHumid = data.slice(-maxDataPoints);
+            charts.tempHumid.data.labels = dataBuffer.tempHumid.map(item => new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString());
+            charts.tempHumid.data.datasets[0].data = dataBuffer.tempHumid.map(item => item.temperature);
+            charts.tempHumid.data.datasets[1].data = dataBuffer.tempHumid.map(item => item.humidity);
+            charts.tempHumid.update();
+
+            // Cập nhật biểu đồ pH và độ dẫn điện
+            dataBuffer.phCond = data.slice(-maxDataPoints);
+            charts.phCond.data.labels = dataBuffer.phCond.map(item => new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString());
+            charts.phCond.data.datasets[0].data = dataBuffer.phCond.map(item => item.ph);
+            charts.phCond.data.datasets[1].data = dataBuffer.phCond.map(item => item.conductivity);
+            charts.phCond.update();
+
+            // Cập nhật biểu đồ NPK
+            dataBuffer.npk = data.slice(-maxDataPoints);
+            charts.npk.data.labels = dataBuffer.npk.map(item => new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString());
+            charts.npk.data.datasets[0].data = dataBuffer.npk.map(item => item.nitrogen);
+            charts.npk.data.datasets[1].data = dataBuffer.npk.map(item => item.phosphorus);
+            charts.npk.data.datasets[2].data = dataBuffer.npk.map(item => item.potassium);
+            charts.npk.update();
+        }
+
+        // Lấy dữ liệu từ API
+        async function fetchData(fromDate = null, toDate = null) {
+            try {
+                let url = '/getdata-chart';
+                if (fromDate && toDate) {
+                    url += `?start=${fromDate}&end=${toDate}`;
+                }
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                if (data.length > 0) {
+                    lastTimestamp = new Date(data[0].timestamp).getTime();
+                    updateLatestValues(data);
+                    updateCharts(data);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Lấy thêm dữ liệu khi pan
+        async function fetchMoreData(panOffset) {
+            try {
+                const response = await fetch(`/getdata-chart?start=${new Date(panOffset).toISOString()}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                if (data.length > 0) {
+                    lastTimestamp = new Date(data[data.length - 1].timestamp).getTime();
+                    updateCharts(data);
+                }
+            } catch (error) {
+                console.error('Error fetching more data:', error);
+            }
+        }
+
+        // Xử lý sự kiện checkbox change
+        function handleCheckboxChange() {
+            const tempCheckBox = document.getElementById('tempCheckBox');
+            const humidCheckBox = document.getElementById('humidCheckBox');
+            const phCheckBox = document.getElementById('phCheckBox');
+            const condCheckBox = document.getElementById('condCheckBox');
+            const nCheckBox = document.getElementById('nCheckBox');
+            const pCheckBox = document.getElementById('pCheckBox');
+            const kCheckBox = document.getElementById('kCheckBox');
+
+            charts.tempHumid.data.datasets[0].hidden = !tempCheckBox.checked;
+            charts.tempHumid.data.datasets[1].hidden = !humidCheckBox.checked;
+            charts.tempHumid.update();
+
+            charts.phCond.data.datasets[0].hidden = !phCheckBox.checked;
+            charts.phCond.data.datasets[1].hidden = !condCheckBox.checked;
+            charts.phCond.update();
+
+            charts.npk.data.datasets[0].hidden = !nCheckBox.checked;
+            charts.npk.data.datasets[1].hidden = !pCheckBox.checked;
+            charts.npk.data.datasets[2].hidden = !kCheckBox.checked;
+            charts.npk.update();
+        }
+
+        // Xử lý sự kiện update chart
+        document.getElementById('updateChartButton').addEventListener('click', () => {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            if (fromDate && toDate) {
+                fetchData(fromDate, toDate);
+            }
+        });
+
+        // Khởi tạo khi trang được tải
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            fetchData();
+            // Cập nhật dữ liệu mỗi 30 giây
+            setInterval(() => fetchData(), 30000);
+
+            // Gắn sự kiện change cho các checkbox
+            document.querySelectorAll('.form-check-input').forEach((input) => {
+                input.addEventListener('change', handleCheckboxChange);
+            });
+        });
+    </script>
+</body>
+</html>

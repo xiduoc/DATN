@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data Report</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Sensor Data Report</h1>
+
+        <div class="date-selection">
+            <span>Select From Date: </span>
+            <input type="date" id="fromDate" name="fromDate">
+            <span>Select To Date: </span>
+            <input type="date" id="toDate" name="toDate">
+            <button type="button" id="showData">Show Data</button>
+            <button type="button" id="exportBtn">Export</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="dataTable" class="display">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Humidity</th>
+                        <th>Temperature</th>
+                        <th>Conductivity</th>
+                        <th>pH</th>
+                        <th>Nitrogen</th>
+                        <th>Phosphorus</th>
+                        <th>Potassium</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% data.forEach(row => { %>
+                        <tr>
+                            <td data-order="<%= new Date(row.timestamp).getTime() %>">
+                                <%= new Date(row.timestamp).toLocaleDateString() %>
+                            </td>
+                            <td><%= new Date(row.timestamp).toLocaleTimeString() %></td>
+                            <td><%= row.humidity %></td>
+                            <td><%= row.temperature %></td>
+                            <td><%= row.conductivity %></td>
+                            <td><%= row.ph %></td>
+                            <td><%= row.nitrogen %></td>
+                            <td><%= row.phosphorus %></td>
+                            <td><%= row.potassium %></td>
+                            <td><%= row.location || 'N/A' %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#dataTable').DataTable({
+                pageLength: 10,
+                lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, 'All']],
+                order: [[0, 'desc']], // Sort by date column descending by default
+                columnDefs: [{
+                    targets: 0,
+                    type: 'num'  // Use numeric sorting for timestamps
+                }],
+                language: {
+                    lengthMenu: "Show _MENU_ entries per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    },
+                    search: "Search:",
+                    zeroRecords: "No matching records found"
+                }
+            });
+
+            // Handle show data button click
+            $('#showData').click(function() {
+                const fromDate = $('#fromDate').val();
+                const toDate = $('#toDate').val();
+                
+                if (!fromDate || !toDate) {
+                    alert('Please select both dates');
+                    return;
+                }
+
+                window.location.href = `/?fromDate=${fromDate}&toDate=${toDate}`;
+            });
+
+            // Handle export button click
+            $('#exportBtn').click(function() {
+                const fromDate = $('#fromDate').val();
+                const toDate = $('#toDate').val();
+                
+                if (!fromDate || !toDate) {
+                    alert('Please select both dates');
+                    return;
+                }
+
+                window.location.href = `/export?fromDate=${fromDate}&toDate=${toDate}`;
+            });
+
+            // Set default dates
+            function setDefaultDates() {
+                const today = new Date();
+                const thirtyDaysAgo = new Date(today);
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+
+                if (!$('#fromDate').val()) {
+                    $('#fromDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
+                }
+                if (!$('#toDate').val()) {
+                    $('#toDate').val(today.toISOString().split('T')[0]);
+                }
+            }
+
+            setDefaultDates();
+        });
+    </script>
+</body>
+</html>

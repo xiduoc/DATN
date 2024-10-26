@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sensor Locations Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            height: 85vh; /* Changed from 600px to 90% of viewport height */
+            width: 100%;
+        }
+        .info-box {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .sensor-popup {
+            font-size: 14px;
+        }
+        .sensor-popup table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .sensor-popup th, .sensor-popup td {
+            padding: 5px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .sensor-popup th {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-box">
+        <h2>Sensor Locations Map</h2>
+        <a href="/">Back to Home</a>
+    </div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([10.8231, 106.6297], 13); // Default view of Vietnam
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add markers for each point
+        const points = <%- JSON.stringify(points) %>;
+        
+        // Create a bounds object to fit all markers
+        const bounds = L.latLngBounds();
+
+        points.forEach(point => {
+            if (point.latitude && point.longitude) {
+                // Create popup content with sensor data
+                const popupContent = `
+                    <div class="sensor-popup">
+                        <h3>Sensor Data</h3>
+                        <table>
+                            <tr><th>Location:</th><td>${point.location || 'Unknown'}</td></tr>
+                            <tr><th>Time:</th><td>${point.formatted_timestamp}</td></tr>
+                            <tr><th>Temperature:</th><td>${point.temperature}°C</td></tr>
+                            <tr><th>Humidity:</th><td>${point.humidity}%</td></tr>
+                            <tr><th>pH:</th><td>${point.ph}</td></tr>
+                            <tr><th>Conductivity:</th><td>${point.conductivity}</td></tr>
+                            <tr><th>Nitrogen:</th><td>${point.nitrogen}</td></tr>
+                            <tr><th>Phosphorus:</th><td>${point.phosphorus}</td></tr>
+                            <tr><th>Potassium:</th><td>${point.potassium}</td></tr>
+                        </table>
+                    </div>
+                `;
+
+                const marker = L.marker([point.latitude, point.longitude])
+                    .bindPopup(popupContent)
+                    .addTo(map);
+                    
+                bounds.extend([point.latitude, point.longitude]);
+            }
+        });
+
+        // Fit the map to show all markers if there are any
+        if (bounds.isValid()) {
+            map.fitBounds(bounds);
+        }
+    </script>
+</body>
+</html>
