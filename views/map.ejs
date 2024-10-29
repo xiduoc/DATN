@@ -1,25 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Locations Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
         #map {
-            height: 85vh; /* Changed from 600px to 90% of viewport height */
+            height: 85vh;
             width: 100%;
         }
         .info-box {
-            padding: 10px;
-            background: white;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        .sensor-popup {
-            font-size: 14px;
+            margin-bottom: 20px;
         }
         .sensor-popup table {
             border-collapse: collapse;
@@ -54,43 +46,57 @@
         }).addTo(map);
 
         // Add markers for each point
-        const points = <%- JSON.stringify(points) %>;
+        const points = <%- JSON.stringify(points) %>; // Assuming points is passed from the server
         
         // Create a bounds object to fit all markers
         const bounds = L.latLngBounds();
 
-        points.forEach(point => {
+        points.forEach((point, index) => {
             if (point.latitude && point.longitude) {
+                const { latitude, longitude, location = 'Unknown', formatted_timestamp, temperature, humidity, ph, conductivity, nitrogen, phosphorus, potassium, circleColor = '#0000ff' } = point;
+
                 // Create popup content with sensor data
                 const popupContent = `
                     <div class="sensor-popup">
                         <h3>Sensor Data</h3>
                         <table>
-                            <tr><th>Location:</th><td>${point.location || 'Unknown'}</td></tr>
-                            <tr><th>Time:</th><td>${point.formatted_timestamp}</td></tr>
-                            <tr><th>Temperature:</th><td>${point.temperature}°C</td></tr>
-                            <tr><th>Humidity:</th><td>${point.humidity}%</td></tr>
-                            <tr><th>pH:</th><td>${point.ph}</td></tr>
-                            <tr><th>Conductivity:</th><td>${point.conductivity}</td></tr>
-                            <tr><th>Nitrogen:</th><td>${point.nitrogen}</td></tr>
-                            <tr><th>Phosphorus:</th><td>${point.phosphorus}</td></tr>
-                            <tr><th>Potassium:</th><td>${point.potassium}</td></tr>
+                            <tr><th>Location:</th><td>${location}</td></tr>
+                            <tr><th>Time:</th><td>${formatted_timestamp}</td></tr>
+                            <tr><th>Temperature:</th><td>${temperature}°C</td></tr>
+                            <tr><th>Humidity:</th><td>${humidity}%</td></tr>
+                            <tr><th>pH:</th><td>${ph}</td></tr>
+                            <tr><th>Conductivity:</th><td>${conductivity}</td></tr>
+                            <tr><th>Nitrogen:</th><td>${nitrogen}</td></tr>
+                            <tr><th>Phosphorus:</th><td>${phosphorus}</td></tr>
+                            <tr><th>Potassium:</th><td>${potassium}</td></tr>
                         </table>
+                        <label for="circleColor-${index}">Circle Color:</label>
+                        <input type="color" id="circleColor-${index}" name="circleColor" value="${circleColor}">
                     </div>
                 `;
 
-                const marker = L.marker([point.latitude, point.longitude])
-                    .bindPopup(popupContent)
-                    .addTo(map);
-                    
-                bounds.extend([point.latitude, point.longitude]);
+                const marker = L.marker([latitude, longitude]).bindPopup(popupContent).addTo(map);
+                const circleMarker = L.circleMarker([latitude, longitude], {
+                    color: circleColor,
+                    fillColor: circleColor,
+                    fillOpacity: 0.5,
+                    radius: 10
+                }).addTo(map);
+
+                bounds.extend([latitude, longitude]);
+
+                marker.on('popupopen', function() {
+                    const colorInput = document.getElementById(`circleColor-${index}`);
+                    colorInput.addEventListener('input', function() {
+                        const newColor = colorInput.value;
+                        circleMarker.setStyle({ color: newColor, fillColor: newColor });
+                    });
+                });
             }
         });
 
-        // Fit the map to show all markers if there are any
-        if (bounds.isValid()) {
-            map.fitBounds(bounds);
-        }
+        // Fit the map to the bounds of all markers
+        map.fitBounds(bounds);
     </script>
 </body>
 </html>
