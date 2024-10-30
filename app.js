@@ -233,6 +233,84 @@ app.get('/export', async (req, res) => {
     }
 });
 
+// Thêm function phân loại đất
+function classifySoil(data) {
+    const {ph, conductivity, nitrogen, phosphorus, potassium} = data;
+    
+    // Phân loại đất phèn
+    if (ph >= 3.5 && ph <= 5.5 && conductivity > 1000) {
+        return {
+            soilType: 'Đất phèn',
+            characteristics: `pH thấp (${ph}), độ dẫn điện cao (${conductivity}), dinh dưỡng NPK thấp`,
+            recommendations: 'Cần bổ sung vôi để cải tạo độ pH, bổ sung phân bón NPK'
+        };
+    }
+    
+    // Đất chua
+    if (ph < 6.5) {
+        return {
+            soilType: 'Đất chua',
+            characteristics: `pH thấp (${ph}), khả năng giữ dinh dưỡng kém`,
+            recommendations: 'Cần bổ sung vôi để tăng pH, bổ sung phân hữu cơ'
+        };
+    }
+
+    // Đất phù sa
+    if (ph >= 6.5 && ph <= 7.5 && conductivity >= 500 && conductivity <= 1000) {
+        return {
+            soilType: 'Đất phù sa',
+            characteristics: `pH cân bằng (${ph}), độ dẫn điện trung bình, màu mỡ`,
+            recommendations: 'Duy trì cân bằng dinh dưỡng bằng phân bón định kỳ'
+        };
+    }
+
+    // Đất kiềm
+    if (ph > 7.5) {
+        return {
+            soilType: 'Đất kiềm',
+            characteristics: `pH cao (${ph}), có thể thiếu một số vi chất`,
+            recommendations: 'Bổ sung phân bón lưu huỳnh, bổ sung chất hữu cơ'
+        };
+    }
+
+    return {
+        soilType: 'Chưa xác định',
+        characteristics: 'Cần thêm dữ liệu để phân tích',
+        recommendations: 'Cần lấy thêm mẫu để phân tích'
+    };
+}
+
+// Route mới cho phân loại đất
+app.get('/soil-classification', async (req, res) => {
+    try {
+        const results = await query(`
+            SELECT 
+                location,
+                AVG(ph) as ph,
+                AVG(conductivity) as conductivity,
+                AVG(nitrogen) as nitrogen,
+                AVG(phosphorus) as phosphorus,
+                AVG(potassium) as potassium
+            FROM readnpk 
+            WHERE location IS NOT NULL
+            GROUP BY location
+        `);
+
+        const soilData = results.map(row => {
+            const classification = classifySoil(row);
+            return {
+                location: row.location,
+                ...classification
+            };
+        });
+
+        res.render('soil-classification', { soilData });
+    } catch (error) {
+        console.error('Soil classification error:', error);
+        res.status(500).send('Error generating soil classification');
+    }
+});
+
 // Initialize location updates
 setInterval(updateLocations, CONFIG.LOCATION_UPDATE_INTERVAL);
 setTimeout(updateLocations, 1000);
