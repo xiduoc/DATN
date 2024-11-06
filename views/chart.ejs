@@ -19,21 +19,6 @@
         .chart-container:active {
             cursor: grabbing;
         }
-        .card {
-            margin-bottom: 20px;
-        }
-        .latest-values {
-            font-size: 1.1em;
-            margin: 10px 0;
-        }
-        .value-label {
-            font-weight: bold;
-        }
-        #updateTime {
-            text-align: center;
-            margin: 10px 0;
-            color: #666;
-        }
         .navigation {
             margin-bottom: 20px;
             background-color: #f8f9fa;
@@ -62,21 +47,21 @@
             color: #666;
         }
         .input-group {
-            max-width: 400px; /* Giới hạn chiều rộng của nhóm input */
-            margin: auto; /* Căn giữa nhóm input */
+            max-width: 400px;
+            margin: auto;
             justify-content: center;
         }
         
         .input-group .form-control {
-            width: 130px; /* Đặt chiều rộng cho các input date */
-            margin-right: 10px; /* Khoảng cách giữa các input */
+            width: 130px;
+            margin-right: 10px;
         }
         
         .input-group .btn {
-            padding: 0.375rem 0.75rem; /* Điều chỉnh padding cho nút */
+            padding: 0.375rem 0.75rem;
         }
         .date-range-container {
-            text-align: center; /* Căn giữa nội dung */
+            text-align: center;
         }
     </style>
 </head>
@@ -93,44 +78,6 @@
             <div class="col">
                 <h2 class="text-center">Sensor Data Dashboard</h2>
                 <p id="updateTime" class="text-center">Last updated: <span></span></p>
-            </div>
-        </div>
-
-        <!-- Latest Values Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Nhiệt độ & Độ ẩm</h5>
-                        <div class="latest-values">
-                            <div><span class="value-label">Nhiệt độ:</span> <span id="latestTemp">--</span>°C</div>
-                            <div><span class="value-label">Độ ẩm:</span> <span id="latestHumid">--</span>%</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">pH & Độ dẫn điện</h5>
-                        <div class="latest-values">
-                            <div><span class="value-label">pH:</span> <span id="latestPh">--</span></div>
-                            <div><span class="value-label">Độ dẫn điện:</span> <span id="latestCond">--</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Chỉ số NPK</h5>
-                        <div class="latest-values">
-                            <div><span class="value-label">Nitrogen:</span> <span id="latestN">--</span></div>
-                            <div><span class="value-label">Phosphorus:</span> <span id="latestP">--</span></div>
-                            <div><span class="value-label">Potassium:</span> <span id="latestK">--</span></div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -423,21 +370,6 @@
             }
         }
 
-        // Cập nhật giá trị mới nhất
-        function updateLatestValues(data) {
-            if (data.length > 0) {
-                const latest = data[0];
-                document.getElementById('latestTemp').textContent = latest.temperature.toFixed(1);
-                document.getElementById('latestHumid').textContent = latest.humidity.toFixed(1);
-                document.getElementById('latestPh').textContent = latest.ph.toFixed(2);
-                document.getElementById('latestCond').textContent = latest.conductivity.toFixed(0);
-                document.getElementById('latestN').textContent = latest.nitrogen.toFixed(1);
-                document.getElementById('latestP').textContent = latest.phosphorus.toFixed(1);
-                document.getElementById('latestK').textContent = latest.potassium.toFixed(1);
-                document.querySelector('#updateTime span').textContent = new Date().toLocaleString();
-            }
-        }
-
         // Cập nhật biểu đồ
         function updateCharts(data) {
             // Đảo ngược mảng để hiển thị dữ liệu theo thứ tự thời gian
@@ -469,6 +401,9 @@
             charts.npk.data.datasets[1].data = dataBuffer.npk.map(item => item.phosphorus);
             charts.npk.data.datasets[2].data = dataBuffer.npk.map(item => item.potassium);
             charts.npk.update();
+
+            // Update last update time
+            document.querySelector('#updateTime span').textContent = new Date().toLocaleString();
         }
 
         // Lấy dữ liệu từ API
@@ -483,7 +418,6 @@
                 const data = await response.json();
                 if (data.length > 0) {
                     lastTimestamp = new Date(data[0].timestamp).getTime();
-                    updateLatestValues(data);
                     updateCharts(data);
                 }
             } catch (error) {

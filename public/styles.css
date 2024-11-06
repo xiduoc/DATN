@@ -11,6 +11,15 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
 }
 
 /* Authentication styles */
@@ -47,7 +56,7 @@ body {
     box-sizing: border-box;
 }
 
-button {
+.auth-container button {
     width: 100%;
     padding: 10px;
     background-color: #007bff;
@@ -56,9 +65,10 @@ button {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    margin-top: 10px;
 }
 
-button:hover {
+.auth-container button:hover {
     background-color: #0056b3;
 }
 
@@ -72,126 +82,223 @@ button:hover {
     text-align: center;
 }
 
-/* Device management styles */
-.devices-list {
-    margin-top: 30px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-th, td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-}
-
-.add-device {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.api-key {
-    font-family: monospace;
-    background: #f8f9fa;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.copy-btn {
-    padding: 4px 8px;
-    font-size: 12px;
-    margin-left: 8px;
-    background-color: #6c757d;
-}
-
-.copy-btn:hover {
-    background-color: #5a6268;
-}
-
-.activate-btn {
-    background-color: #28a745;
-}
-
-.activate-btn:hover {
-    background-color: #218838;
-}
-
-.deactivate-btn {
-    background-color: #dc3545;
-}
-
-.deactivate-btn:hover {
-    background-color: #c82333;
-}
-
 /* Navigation */
-.nav-container {
-    background: white;
-    padding: 10px 20px;
+.navigation {
     margin-bottom: 20px;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.nav-container ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    gap: 20px;
-}
-
-.nav-container a {
-    color: #333;
+.navigation a {
     text-decoration: none;
-    padding: 5px 10px;
-}
-
-.nav-container a:hover {
     color: #007bff;
+    font-weight: bold;
+    margin-right: 15px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    transition: background-color 0.3s ease;
 }
 
-/* API Instructions */
-.api-instructions {
-    background: white;
+.navigation a:hover {
+    background-color: #e2e6ea;
+    text-decoration: underline;
+}
+
+/* Date Selection */
+.date-selection {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
     padding: 20px;
-    border-radius: 8px;
-    margin-top: 30px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.api-instructions pre {
     background: #f8f9fa;
-    padding: 15px;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-family: monospace;
+    border-radius: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-/* Responsive design */
+.date-selection span {
+    font-weight: 500;
+    color: #555;
+    min-width: 120px;
+}
+
+.date-selection input[type="date"] {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 150px;
+}
+
+.date-selection button {
+    padding: 8px 16px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    min-width: 100px;
+    font-weight: 500;
+}
+
+#showData {
+    background-color: #007bff;
+}
+
+#showData:hover {
+    background-color: #0056b3;
+}
+
+#exportBtn {
+    background-color: #28a745;
+}
+
+#exportBtn:hover {
+    background-color: #218838;
+}
+
+/* Table Styles */
+.table-responsive {
+    margin-top: 20px;
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* DataTables Customization */
+.dataTables_wrapper {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 20px;
+}
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 0 5px;
+}
+
+.dataTables_wrapper .dataTables_info {
+    padding-top: 20px;
+}
+
+table.dataTable {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.dataTable thead th {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+    padding: 12px 15px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+table.dataTable tbody td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #dee2e6;
+    color: #555;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    padding-top: 20px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 6px 12px;
+    margin: 0 4px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #007bff !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #007bff;
+    color: white !important;
+    border-color: #007bff;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #f0f0f0;
+    border-color: #ddd;
+    color: #0056b3 !important;
+}
+
+/* Chart Styles */
+.chart-container {
+    margin: 20px 40px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: grab;
+}
+
+.chart-container:active {
+    cursor: grabbing;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
+        margin: 10px;
     }
     
-    table {
-        display: block;
-        overflow-x: auto;
+    .date-selection {
+        flex-direction: column;
+        align-items: stretch;
     }
     
+    .date-selection span {
+        text-align: center;
+    }
+    
+    .date-selection input[type="date"],
+    .date-selection button {
+        width: 100%;
+    }
+    
+    .navigation {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .navigation a {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center;
+        float: none;
+    }
+    
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100%;
+        margin: 5px 0;
+    }
+
     .auth-container {
         margin: 20px 10px;
+        padding: 15px;
     }
 }
