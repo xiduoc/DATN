@@ -73,13 +73,13 @@
         }).addTo(map);
 
         // Add markers for each point
-        const points = <%- JSON.stringify(points) %>; // Assuming points is passed from the server
+        const points = JSON.parse('<%- JSON.stringify(points || []) %>');
         
         // Create a bounds object to fit all markers
         const bounds = L.latLngBounds();
 
         points.forEach((point, index) => {
-            if (point.latitude && point.longitude) {
+            if (point && point.latitude && point.longitude) {
                 const { latitude, longitude, location = 'Unknown', formatted_timestamp, temperature, humidity, ph, conductivity, nitrogen, phosphorus, potassium, circleColor = '#0000ff' } = point;
 
                 // Create popup content with sensor data
@@ -122,8 +122,10 @@
             }
         });
 
-        // Fit the map to the bounds of all markers
-        map.fitBounds(bounds);
+        // Fit the map to the bounds of all markers if there are any points
+        if (points.length > 0) {
+            map.fitBounds(bounds);
+        }
     </script>
 </body>
 </html>
