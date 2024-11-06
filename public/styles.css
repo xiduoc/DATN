@@ -1,5 +1,7 @@
+/* General styles */
 body {
     font-family: Arial, sans-serif;
+    line-height: 1.6;
     margin: 0;
     padding: 20px;
     background-color: #f5f5f5;
@@ -8,174 +10,188 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background-color: white;
     padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    color: #333;
-}
-
-.date-selection {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.date-selection input[type="date"] {
-    padding: 5px;
-    margin: 0 10px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-.date-selection button {
-    padding: 5px 15px;
-    margin: 0 5px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-.date-selection button:hover {
-    background-color: #e0e0e0;
-}
-
-.table-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.show-entries select {
-    margin: 0 5px;
-    padding: 3px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-.search-box input {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    width: 200px;
-}
-
-/* DataTables Customization */
-.dataTables_wrapper {
-    padding: 0;
-}
-
-.dataTables_length {
-    margin-bottom: 15px;
-}
-
-.dataTables_length select {
-    padding: 5px 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: white;
-    font-size: 14px;
-    margin: 0 5px;
-}
-
-.dataTables_length label {
-    font-weight: bold;
-    color: #333;
-}
-
-table.dataTable {
-    border-collapse: collapse !important;
-    width: 100% !important;
-    margin: 0 !important;
-}
-
-table.dataTable thead th {
-    background-color: #f8f8f8;
-    border: 1px solid #ddd;
-    padding: 8px !important;
-    text-align: left;
-}
-
-table.dataTable tbody td {
-    border: 1px solid #ddd;
-    padding: 8px !important;
-}
-
-table.dataTable tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-table.dataTable tbody tr:hover {
-    background-color: #f5f5f5;
-}
-
-.dataTables_info {
-    padding-top: 10px !important;
-}
-
-.dataTables_paginate {
-    padding-top: 10px !important;
-}
-
-.dataTables_paginate .paginate_button {
-    padding: 5px 10px !important;
-    margin: 0 2px !important;
-    border: 1px solid #ddd !important;
-    background-color: #fff !important;
-    color: #333 !important;
-}
-
-.dataTables_paginate .paginate_button.current {
-    background-color: #f0f0f0 !important;
-    border-color: #ccc !important;
-}
-
-.dataTables_paginate .paginate_button:hover {
-    background-color: #f5f5f5 !important;
-    border-color: #ccc !important;
-}
-
-.dataTables_filter {
-    margin-bottom: 15px;
-}
-
-.dataTables_filter input {
-    padding: 5px 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 200px;
-    margin-left: 5px;
-}
-
-.dataTables_filter label {
-    font-weight: bold;
-    color: #333;
-}
-.navigation {
-    margin-bottom: 20px;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
+/* Authentication styles */
+.auth-container {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.navigation a {
-    text-decoration: none;
-    color: #007bff;
-    font-weight: bold;
-    margin-right: 15px;
-    padding: 5px 10px;
-    border-radius: 3px;
-    transition: background-color 0.3s ease;
+.auth-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
 }
 
-.navigation a:hover {
-    background-color: #e2e6ea;
-    text-decoration: underline;
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Device management styles */
+.devices-list {
+    margin-top: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.add-device {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.api-key {
+    font-family: monospace;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.copy-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    margin-left: 8px;
+    background-color: #6c757d;
+}
+
+.copy-btn:hover {
+    background-color: #5a6268;
+}
+
+.activate-btn {
+    background-color: #28a745;
+}
+
+.activate-btn:hover {
+    background-color: #218838;
+}
+
+.deactivate-btn {
+    background-color: #dc3545;
+}
+
+.deactivate-btn:hover {
+    background-color: #c82333;
+}
+
+/* Navigation */
+.nav-container {
+    background: white;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-container a {
+    color: #333;
+    text-decoration: none;
+    padding: 5px 10px;
+}
+
+.nav-container a:hover {
+    color: #007bff;
+}
+
+/* API Instructions */
+.api-instructions {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.api-instructions pre {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .auth-container {
+        margin: 20px 10px;
+    }
 }

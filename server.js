@@ -2,89 +2,125 @@ const express = require('express');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const { authenticateDevice } = require('./middleware/auth');
+
 const app = express();
 const port = 3000;
 
-// Cấu hình CORS
+// Configure CORS
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Kết nối đến cơ sở dữ liệu MySQL
-const db = mysql.createConnection({
+// MySQL connection pool
+const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'test'
+    database: 'test',
+    connectionLimit: 10
 });
 
-// Kiểm tra kết nối
-db.connect(err => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
-    }
-    console.log('Connected to MySQL');
-});
+// Promisify database queries
+const query = (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+        pool.query(sql, params, (error, results) => {
+            if (error) reject(error);
+            resolve(results);
+        });
+    });
+};
 
-// Định nghĩa endpoint để nhận dữ liệu từ ESP32
-app.post('/insert', (req, res) => {
-    const { Humidity, Temperature, Conductivity, pH, Nitrogen, Phosphorus, Potassium, Latitude, Longitude } = req.body;
-    
-    const sql = `
-        INSERT INTO readnpk 
-        (humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, latitude, longitude) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    db.query(sql, [
-        Humidity,
-        Temperature,
-        Conductivity,
-        pH,
-        Nitrogen,
-        Phosphorus,
-        Potassium,
+// API endpoint to receive data from ESP32
+app.post('/insert', authenticateDevice, async (req, res) => {
+    const { 
+        Humidity, 
+        Temperature, 
+        Conductivity, 
+        pH, 
+        Nitrogen, 
+        Phosphorus, 
+        Potassium, 
         Latitude, 
-        Longitude
-    ], (err, result) => {
-        if (err) {
-            console.error('Error inserting data:', err);
-            return res.status(500).json({ error: 'Error inserting data' });
-        }
-        res.json({ message: 'Data inserted successfully' });
-    });
-});
-
-// Endpoint để lấy dữ liệu mới nhất
-app.get('/latest', (req, res) => {
-    const sql = `
-        SELECT 
-            humidity as Humidity,
-            temperature as Temperature,
-            conductivity as Conductivity,
-            ph as pH,
-            nitrogen as Nitrogen,
-            phosphorus as Phosphorus,
-            potassium as Potassium,
-            latitude as Latitude, 
-            longitude as Longitude,
-            timestamp
-        FROM readnpk 
-        ORDER BY timestamp DESC 
-        LIMIT 1
-    `;
+        Longitude 
+    } = req.body;
     
-    db.query(sql, (err, result) => {
-        if (err) {
-            console.error('Error fetching data:', err);
-            return res.status(500).json({ error: 'Error fetching data' });
+    try {
+        await query(`
+            INSERT INTO readnpk 
+            (humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, 
+             latitude, longitude, user_id, device_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            Humidity,
+            Temperature,
+            Conductivity,
+            pH,
+            Nitrogen,
+            Phosphorus,
+            Potassium,
+            Latitude, 
+            Longitude,
+            req.device.user_id,
+            req.device.id
+        ]);
+
+        res.json({ 
+            message: 'Data inserted successfully',
+            device_id: req.device.id,
+            user_id: req.device.user_id
+        });
+    } catch (error) {
+        console.error('Error inserting data:', error);
+        res.status(500).json({ error: 'Error inserting data' });
+    }
+});
+
+// Get latest data for a specific device
+app.get('/latest/:deviceId', authenticateDevice, async (req, res) => {
+    try {
+        const results = await query(`
+            SELECT 
+                humidity as Humidity,
+                temperature as Temperature,
+                conductivity as Conductivity,
+                ph as pH,
+                nitrogen as Nitrogen,
+                phosphorus as Phosphorus,
+                potassium as Potassium,
+                latitude as Latitude, 
+                longitude as Longitude,
+                timestamp
+            FROM readnpk 
+            WHERE device_id = ?
+            ORDER BY timestamp DESC 
+            LIMIT 1
+        `, [req.params.deviceId]);
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'No data found for this device' });
         }
-        res.json(result[0]);
+
+        res.json(results[0]);
+    } catch (error) {
+        console.error('Error fetching latest data:', error);
+        res.status(500).json({ error: 'Error fetching data' });
+    }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    pool.query('SELECT 1', (err) => {
+        if (err) {
+            console.error('Database connection error:', err);
+            res.status(500).json({ status: 'error', message: 'Database connection failed' });
+        } else {
+            res.json({ status: 'healthy', message: 'Server and database are running' });
+        }
     });
 });
 
-// Khởi động server
+// Start server
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`API Server running at http://localhost:${port}`);
 });

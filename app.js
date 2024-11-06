@@ -4,6 +4,10 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const ExcelJS = require('exceljs');
 const fetch = require('node-fetch');
+const bcrypt = require('bcryptjs');
+const cookieParser = require('cookie-parser');
+const { authenticateUser, generateApiKey, JWT_SECRET } = require('./middleware/auth');
+const jwt = require('jsonwebtoken');
 
 // Configuration constants
 const CONFIG = {
@@ -29,8 +33,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(cookieParser());
 
-// Database connection pool instead of single connection
+// Database connection pool
 const pool = mysql.createPool({
     ...CONFIG.DB,
     connectionLimit: 10,
@@ -102,25 +108,154 @@ async function updateLocations() {
         );
 
         for (const row of results) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Rate limiting
-            const locationName = await getLocationName(row.latitude, row.longitude);
-            
-            await query('UPDATE readnpk SET location = ? WHERE id = ?', [locationName, row.id])
-                .catch(err => console.error(`Location update failed for ID ${row.id}:`, err));
+            if (row.latitude && row.longitude) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Rate limiting
+                const locationName = await getLocationName(row.latitude, row.longitude);
+                
+                await query('UPDATE readnpk SET location = ? WHERE id = ?', [locationName, row.id])
+                    .catch(err => console.error(`Location update failed for ID ${row.id}:`, err));
+            }
         }
     } catch (error) {
         console.error('Location update error:', error);
     }
 }
 
-// Routes
-app.get('/', async (req, res) => {
+// Start location updates
+setInterval(updateLocations, CONFIG.LOCATION_UPDATE_INTERVAL);
+setTimeout(updateLocations, 1000); // Initial update
+
+// Authentication Routes
+app.get('/register', (req, res) => {
+    res.render('register');
+});
+
+app.post('/register', async (req, res) => {
+    const { username, email, password, confirm_password } = req.body;
+    
+    if (password !== confirm_password) {
+        return res.render('register', { error: 'Passwords do not match' });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await query(
+            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+            [username, email, hashedPassword]
+        );
+        res.redirect('/login');
+    } catch (error) {
+        res.render('register', { error: 'Registration failed. Username or email may already exist.' });
+    }
+});
+
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const users = await query('SELECT * FROM users WHERE username = ?', [username]);
+        const user = users[0];
+
+        if (!user || !await bcrypt.compare(password, user.password)) {
+            return res.render('login', { error: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
+
+        res.redirect('/');
+    } catch (error) {
+        console.error('Login error:', error);
+        res.render('login', { error: 'Login failed' });
+    }
+});
+
+app.get('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.redirect('/login');
+});
+
+// Device Management Routes
+app.get('/devices', authenticateUser, async (req, res) => {
+    try {
+        const devices = await query(
+            'SELECT * FROM devices WHERE user_id = ? ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.render('devices', { devices });
+    } catch (error) {
+        console.error('Error fetching devices:', error);
+        res.status(500).send('Error fetching devices');
+    }
+});
+
+app.post('/devices/new', authenticateUser, async (req, res) => {
+    const { name } = req.body;
+    const apiKey = generateApiKey();
+
+    try {
+        await query(
+            'INSERT INTO devices (name, api_key, user_id) VALUES (?, ?, ?)',
+            [name, apiKey, req.user.id]
+        );
+        res.redirect('/devices');
+    } catch (error) {
+        console.error('Error creating device:', error);
+        res.status(500).send('Error creating device');
+    }
+});
+
+app.post('/devices/:id/toggle', authenticateUser, async (req, res) => {
+    const deviceId = req.params.id;
+    
+    try {
+        const [device] = await query(
+            'SELECT status FROM devices WHERE id = ? AND user_id = ?',
+            [deviceId, req.user.id]
+        );
+
+        if (!device) {
+            return res.status(404).send('Device not found');
+        }
+
+        const newStatus = device.status === 'active' ? 'inactive' : 'active';
+        
+        await query(
+            'UPDATE devices SET status = ? WHERE id = ?',
+            [newStatus, deviceId]
+        );
+
+        res.redirect('/devices');
+    } catch (error) {
+        console.error('Error toggling device:', error);
+        res.status(500).send('Error toggling device status');
+    }
+});
+
+// Protected Routes
+app.get('/', authenticateUser, async (req, res) => {
     try {
         const { fromDate = CONFIG.DEFAULT_DATE_RANGE.start, toDate = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
         
         const results = await query(
-            'SELECT *, DATE_FORMAT(timestamp, "%Y-%m-%d %H:%i:%s") as formatted_timestamp FROM readnpk WHERE timestamp BETWEEN ? AND ?',
-            [fromDate, toDate]
+            `SELECT r.*, DATE_FORMAT(r.timestamp, "%Y-%m-%d %H:%i:%s") as formatted_timestamp 
+             FROM readnpk r
+             JOIN devices d ON r.device_id = d.id
+             WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?`,
+            [req.user.id, fromDate, toDate]
         );
         
         res.render('index', { data: results });
@@ -130,19 +265,20 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.get('/map', async (req, res) => {
+app.get('/map', authenticateUser, async (req, res) => {
     try {
         const results = await query(`
             WITH RankedData AS (
                 SELECT 
-                    *,
-                    DATE_FORMAT(timestamp, '%Y-%m-%d %H:%i:%s') as formatted_timestamp,
-                    ROW_NUMBER() OVER (PARTITION BY latitude, longitude ORDER BY timestamp DESC) as rn
-                FROM readnpk
-                WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+                    r.*,
+                    DATE_FORMAT(r.timestamp, '%Y-%m-%d %H:%i:%s') as formatted_timestamp,
+                    ROW_NUMBER() OVER (PARTITION BY r.latitude, r.longitude ORDER BY r.timestamp DESC) as rn
+                FROM readnpk r
+                JOIN devices d ON r.device_id = d.id
+                WHERE d.user_id = ? AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
             )
             SELECT * FROM RankedData WHERE rn = 1
-        `);
+        `, [req.user.id]);
         
         res.render('map', { points: results });
     } catch (error) {
@@ -151,26 +287,27 @@ app.get('/map', async (req, res) => {
     }
 });
 
-app.get('/getdata-chart', async (req, res) => {
+app.get('/getdata-chart', authenticateUser, async (req, res) => {
     try {
         const { start = CONFIG.DEFAULT_DATE_RANGE.start, end = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
         
         const results = await query(`
             SELECT 
-                timestamp,
-                humidity,
-                temperature,
-                conductivity,
-                ph,
-                nitrogen,
-                phosphorus,
-                potassium,
-                location
-            FROM readnpk 
-            WHERE timestamp BETWEEN ? AND ?
-            ORDER BY timestamp DESC
+                r.timestamp,
+                r.humidity,
+                r.temperature,
+                r.conductivity,
+                r.ph,
+                r.nitrogen,
+                r.phosphorus,
+                r.potassium,
+                r.location
+            FROM readnpk r
+            JOIN devices d ON r.device_id = d.id
+            WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?
+            ORDER BY r.timestamp DESC
             LIMIT 100
-        `, [start, end]);
+        `, [req.user.id, start, end]);
         
         res.json(results);
     } catch (error) {
@@ -179,16 +316,18 @@ app.get('/getdata-chart', async (req, res) => {
     }
 });
 
-app.get('/chart', (req, res) => res.render('chart'));
+app.get('/chart', authenticateUser, (req, res) => res.render('chart'));
 
-app.get('/export', async (req, res) => {
+app.get('/export', authenticateUser, async (req, res) => {
     try {
         const { fromDate = CONFIG.DEFAULT_DATE_RANGE.start, toDate = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
         
-        const results = await query(
-            'SELECT * FROM readnpk WHERE timestamp BETWEEN ? AND ?',
-            [fromDate, toDate]
-        );
+        const results = await query(`
+            SELECT r.* 
+            FROM readnpk r
+            JOIN devices d ON r.device_id = d.id
+            WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?
+        `, [req.user.id, fromDate, toDate]);
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sensor Data');
@@ -233,7 +372,7 @@ app.get('/export', async (req, res) => {
     }
 });
 
-// Thêm function phân loại đất
+// Soil classification function
 function classifySoil(data) {
     const {ph, conductivity, nitrogen, phosphorus, potassium} = data;
     
@@ -256,7 +395,7 @@ function classifySoil(data) {
     }
 
     // Đất phù sa
-    if (ph >= 6.5 && ph <= 7.5 && conductivity >= 500 && conductivity <= 1000) {
+    if (ph >= 6 && ph <= 7.5 && conductivity >= 500 && conductivity <= 1000 && nitrogen >= 0.1 && phosphorus >= 0.1 && potassium >= 0.1) {
         return {
             soilType: 'Đất phù sa',
             characteristics: `pH cân bằng (${ph}), độ dẫn điện trung bình, màu mỡ`,
@@ -280,45 +419,32 @@ function classifySoil(data) {
     };
 }
 
-// Route mới cho phân loại đất
-app.get('/soil-classification', async (req, res) => {
+app.get('/soil-classification', authenticateUser, async (req, res) => {
     try {
         const results = await query(`
             SELECT 
-                location,
-                AVG(ph) as ph,
-                AVG(conductivity) as conductivity,
-                AVG(nitrogen) as nitrogen,
-                AVG(phosphorus) as phosphorus,
-                AVG(potassium) as potassium
-            FROM readnpk 
-            WHERE location IS NOT NULL
-            GROUP BY location
-        `);
+                r.location,
+                AVG(r.ph) as ph,
+                AVG(r.conductivity) as conductivity,
+                AVG(r.nitrogen) as nitrogen,
+                AVG(r.phosphorus) as phosphorus,
+                AVG(r.potassium) as potassium
+            FROM readnpk r
+            JOIN devices d ON r.device_id = d.id
+            WHERE d.user_id = ? AND r.location IS NOT NULL
+            GROUP BY r.location
+        `, [req.user.id]);
 
-        const soilData = results.map(row => {
-            const classification = classifySoil(row);
-            return {
-                location: row.location,
-                ...classification
-            };
-        });
+        const soilData = results.map(row => ({
+            location: row.location,
+            ...classifySoil(row)
+        }));
 
         res.render('soil-classification', { soilData });
     } catch (error) {
         console.error('Soil classification error:', error);
         res.status(500).send('Error generating soil classification');
     }
-});
-
-// Initialize location updates
-setInterval(updateLocations, CONFIG.LOCATION_UPDATE_INTERVAL);
-setTimeout(updateLocations, 1000);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Application error:', err);
-    res.status(500).send('Internal Server Error');
 });
 
 // Start server

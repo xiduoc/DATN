@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Devices</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>My Devices</h2>
+        
+        <div class="add-device">
+            <h3>Add New Device</h3>
+            <form action="/devices/new" method="POST">
+                <div class="form-group">
+                    <label for="name">Device Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <button type="submit">Generate API Key</button>
+            </form>
+        </div>
+
+        <div class="devices-list">
+            <h3>Your Devices</h3>
+            <% if (devices && devices.length > 0) { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>API Key</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% devices.forEach(device => { %>
+                            <tr>
+                                <td><%= device.name %></td>
+                                <td>
+                                    <code class="api-key"><%= device.api_key %></code>
+                                    <button class="copy-btn" onclick="copyApiKey(this)" data-key="<%= device.api_key %>">Copy</button>
+                                </td>
+                                <td><%= device.status %></td>
+                                <td><%= new Date(device.created_at).toLocaleDateString() %></td>
+                                <td>
+                                    <form action="/devices/<%= device.id %>/toggle" method="POST" style="display: inline;">
+                                        <button type="submit" class="<%= device.status === 'active' ? 'deactivate-btn' : 'activate-btn' %>">
+                                            <%= device.status === 'active' ? 'Deactivate' : 'Activate' %>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p>No devices registered yet.</p>
+            <% } %>
+        </div>
+
+        <div class="api-instructions">
+            <h3>How to Use Your API Key</h3>
+            <p>To authenticate your ESP32 device, include the API key in the HTTP headers of your requests:</p>
+            <pre>
+X-API-Key: your-api-key-here
+            </pre>
+            <p>Example Arduino code:</p>
+            <pre>
+HTTPClient http;
+http.begin("http://your-server/insert");
+http.addHeader("Content-Type", "application/json");
+http.addHeader("X-API-Key", "your-api-key-here");
+
+String jsonData = "{\"Temperature\":25.5,\"Humidity\":60}";
+int httpResponseCode = http.POST(jsonData);
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        function copyApiKey(button) {
+            const apiKey = button.getAttribute('data-key');
+            navigator.clipboard.writeText(apiKey).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+    </script>
+
+    <style>
+        .api-key {
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .copy-btn {
+            margin-left: 8px;
+            padding: 2px 8px;
+            font-size: 0.8em;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .api-instructions {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+    </style>
+</body>
+</html>
