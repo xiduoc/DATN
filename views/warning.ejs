@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sensor Warnings</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .warning-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .warning-table th, .warning-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .warning-table th {
+            background-color: #f4f4f4;
+        }
+        .warning-row {
+            background-color: #fff3f3;
+        }
+        .warning-value {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .safe-range {
+            color: #28a745;
+            font-size: 0.9em;
+        }
+        .location-info {
+            font-style: italic;
+            color: #666;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .filter-form {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .navigation {
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navigation a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            margin-right: 15px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .navigation a:hover {
+            background-color: #e2e6ea;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="navigation">
+            <a href="/">Home</a>
+            <a href="/chart">Charts</a>
+            <a href="/map">Map</a>
+            <a href="/warnings" style="background-color: #dc3545; color: white;">Warnings</a>
+            <a href="/devices">Devices and API Key</a>
+        </div>
+
+        <h1>Sensor Warnings</h1>
+
+        <div class="filter-form">
+            <form method="GET">
+                <label>Date Range:</label>
+                <input type="date" name="fromDate" value="<%= fromDate %>">
+                <input type="date" name="toDate" value="<%= toDate %>">
+                <button type="submit" class="btn">Filter</button>
+            </form>
+        </div>
+
+        <% if (warnings.length === 0) { %>
+            <p>No warnings found. All sensor values are within safe ranges.</p>
+        <% } else { %>
+            <table class="warning-table">
+                <thead>
+                    <tr>
+                        <th>Location</th>
+                        <th>Parameter</th>
+                        <th>Current Value</th>
+                        <th>Safe Range</th>
+                        <th>Timestamp</th>
+                        <th>Recommendations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% warnings.forEach(warning => { %>
+                        <tr class="warning-row">
+                            <td class="location-info"><%= warning.location || 'Unknown Location' %></td>
+                            <td><%= warning.parameter %></td>
+                            <td class="warning-value"><%= warning.value %> <%= warning.unit %></td>
+                            <td class="safe-range"><%= warning.safeRange %> <%= warning.unit %></td>
+                            <td class="timestamp"><%= warning.timestamp %></td>
+                            <td><%= warning.recommendation %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
+</body>
+</html>

@@ -8,6 +8,12 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        .warning-value {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
     
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -17,8 +23,11 @@
     <div class="container">
         <!-- Navigation Links -->
         <nav class="navigation">
+            <a href="/">Home</a>
             <a href="/chart">Charts</a>
             <a href="/map">Map</a>
+            <a href="/warnings" style="background-color: #dc3545; color: white;">Warnings</a>
+            <a href="/devices">Devices and API Key</a>
         </nav>
 
         <h1>Data Report</h1>
@@ -55,13 +64,27 @@
                                 <%= new Date(row.timestamp).toLocaleDateString() %>
                             </td>
                             <td><%= new Date(row.timestamp).toLocaleTimeString() %></td>
-                            <td><%= row.humidity %></td>
-                            <td><%= row.temperature %></td>
-                            <td><%= row.conductivity %></td>
-                            <td><%= row.ph %></td>
-                            <td><%= row.nitrogen %></td>
-                            <td><%= row.phosphorus %></td>
-                            <td><%= row.potassium %></td>
+                            <td class="<%= (row.humidity < 40 || row.humidity > 80) ? 'warning-value' : '' %>">
+                                <%= row.humidity %>
+                            </td>
+                            <td class="<%= (row.temperature < 20 || row.temperature > 30) ? 'warning-value' : '' %>">
+                                <%= row.temperature %>
+                            </td>
+                            <td class="<%= (row.conductivity < 0 || row.conductivity > 2000) ? 'warning-value' : '' %>">
+                                <%= row.conductivity %>
+                            </td>
+                            <td class="<%= (row.ph < 6.0 || row.ph > 7.5) ? 'warning-value' : '' %>">
+                                <%= row.ph %>
+                            </td>
+                            <td class="<%= (row.nitrogen < 150 || row.nitrogen > 300) ? 'warning-value' : '' %>">
+                                <%= row.nitrogen %>
+                            </td>
+                            <td class="<%= (row.phosphorus < 25 || row.phosphorus > 50) ? 'warning-value' : '' %>">
+                                <%= row.phosphorus %>
+                            </td>
+                            <td class="<%= (row.potassium < 150 || row.potassium > 300) ? 'warning-value' : '' %>">
+                                <%= row.potassium %>
+                            </td>
                             <td><%= row.location || 'N/A' %></td>
                         </tr>
                     <% }) %>

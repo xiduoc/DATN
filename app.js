@@ -22,6 +22,57 @@ const CONFIG = {
     DEFAULT_DATE_RANGE: {
         start: '2000-01-01',
         end: '2100-01-01'
+    },
+    SAFE_RANGES: {
+        humidity: { 
+            min: 40, 
+            max: 80, 
+            unit: '%', 
+            name: 'Humidity',
+            recommendation: 'Adjust irrigation or ventilation to maintain optimal humidity levels.'
+        },
+        temperature: { 
+            min: 20, 
+            max: 30, 
+            unit: '°C', 
+            name: 'Temperature',
+            recommendation: 'Consider shading or ventilation to maintain optimal temperature.'
+        },
+        conductivity: { 
+            min: 0, 
+            max: 2000, 
+            unit: 'µS/cm', 
+            name: 'Conductivity',
+            recommendation: 'Check soil salinity and adjust fertilization accordingly.'
+        },
+        ph: { 
+            min: 6.0, 
+            max: 7.5, 
+            unit: '', 
+            name: 'pH',
+            recommendation: 'Add appropriate amendments to adjust soil pH to optimal range.'
+        },
+        nitrogen: { 
+            min: 150, 
+            max: 300, 
+            unit: 'mg/kg', 
+            name: 'Nitrogen',
+            recommendation: 'Adjust nitrogen fertilization based on crop requirements.'
+        },
+        phosphorus: { 
+            min: 25, 
+            max: 50, 
+            unit: 'mg/kg', 
+            name: 'Phosphorus',
+            recommendation: 'Consider phosphorus fertilization if levels are low.'
+        },
+        potassium: { 
+            min: 150, 
+            max: 300, 
+            unit: 'mg/kg', 
+            name: 'Potassium',
+            recommendation: 'Apply potassium fertilizer if levels are below optimal range.'
+        }
     }
 };
 
@@ -98,6 +149,23 @@ function formatLocationName(data) {
     ].filter(Boolean);
     
     return parts.join(', ') || data.display_name || 'Unknown Location';
+}
+
+// Check if a value is outside safe range
+function checkWarning(parameter, value) {
+    const range = CONFIG.SAFE_RANGES[parameter];
+    if (!range) return null;
+    
+    if (value < range.min || value > range.max) {
+        return {
+            parameter: range.name,
+            value: value,
+            unit: range.unit,
+            safeRange: `${range.min} - ${range.max}`,
+            recommendation: range.recommendation
+        };
+    }
+    return null;
 }
 
 // Optimized location update function
@@ -245,6 +313,45 @@ app.post('/devices/:id/toggle', authenticateUser, async (req, res) => {
     }
 });
 
+// Warning Route
+app.get('/warnings', authenticateUser, async (req, res) => {
+    try {
+        const { fromDate = CONFIG.DEFAULT_DATE_RANGE.start, toDate = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
+        
+        const results = await query(`
+            SELECT r.*, DATE_FORMAT(r.timestamp, "%Y-%m-%d %H:%i:%s") as formatted_timestamp 
+            FROM readnpk r
+            JOIN devices d ON r.device_id = d.id
+            WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?
+            ORDER BY r.timestamp DESC
+        `, [req.user.id, fromDate, toDate]);
+
+        const warnings = [];
+        
+        results.forEach(reading => {
+            ['humidity', 'temperature', 'conductivity', 'ph', 'nitrogen', 'phosphorus', 'potassium'].forEach(param => {
+                const warning = checkWarning(param, reading[param]);
+                if (warning) {
+                    warnings.push({
+                        ...warning,
+                        location: reading.location,
+                        timestamp: reading.formatted_timestamp
+                    });
+                }
+            });
+        });
+
+        res.render('warning', { 
+            warnings,
+            fromDate,
+            toDate
+        });
+    } catch (error) {
+        console.error('Warning route error:', error);
+        res.status(500).send('Server error');
+    }
+});
+
 // Protected Routes
 app.get('/', authenticateUser, async (req, res) => {
     try {
@@ -371,7 +478,6 @@ app.get('/export', authenticateUser, async (req, res) => {
         res.status(500).send('Export failed');
     }
 });
-
 
 // Start server
 app.listen(CONFIG.PORT, () => {
