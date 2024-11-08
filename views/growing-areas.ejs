@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quản lý vùng trồng</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .growing-areas {
+            margin: 20px 0;
+        }
+        .area-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .area-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .area-name {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .area-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .area-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .detail-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .add-area-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-edit {
+            background: #28a745;
+            color: white;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        .status-active {
+            color: #28a745;
+        }
+        .status-inactive {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navigation">
+            <a href="/">Dashboard</a>
+            <a href="/chart">Charts</a>
+            <a href="/map">Map</a>
+            <a href="/warnings">Warnings</a>
+        </nav>
+
+        <h1>Quản lý vùng trồng</h1>
+
+        <div class="add-area-form">
+            <h2>Thêm vùng trồng mới</h2>
+            <form action="/growing-areas/add" method="POST">
+                <div class="form-group">
+                    <label for="name">Tên vùng trồng:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Mô tả:</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="location">Vị trí:</label>
+                    <input type="text" id="location" name="location" required>
+                </div>
+                <div class="form-group">
+                    <label for="area">Diện tích (m²):</label>
+                    <input type="number" id="area" name="area" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="crop_type">Loại cây trồng:</label>
+                    <input type="text" id="crop_type" name="crop_type" required>
+                </div>
+                <button type="submit" class="btn">Thêm vùng trồng</button>
+            </form>
+        </div>
+
+        <div class="growing-areas">
+            <% areas.forEach(area => { %>
+                <div class="area-card">
+                    <div class="area-header">
+                        <span class="area-name"><%= area.name %></span>
+                        <div class="area-actions">
+                            <form action="/growing-areas/<%= area.id %>/edit" method="GET" style="display: inline;">
+                                <button type="submit" class="btn btn-edit">Sửa</button>
+                            </form>
+                            <form action="/growing-areas/<%= area.id %>/delete" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-delete" onclick="return confirm('Bạn có chắc chắn muốn xóa vùng trồng này?')">Xóa</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="area-details">
+                        <div class="detail-item">
+                            <strong>Vị trí:</strong> <%= area.location %>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Diện tích:</strong> <%= area.area %> m²
+                        </div>
+                        <div class="detail-item">
+                            <strong>Loại cây trồng:</strong> <%= area.crop_type %>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Trạng thái:</strong> 
+                            <span class="status-<%= area.status === 'active' ? 'active' : 'inactive' %>">
+                                <%= area.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động' %>
+                            </span>
+                        </div>
+                    </div>
+                    <% if (area.description) { %>
+                        <div class="area-description">
+                            <p><strong>Mô tả:</strong> <%= area.description %></p>
+                        </div>
+                    <% } %>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</body>
+</html>

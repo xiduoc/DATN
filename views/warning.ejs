@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Sensor Warnings</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="/styles.css">
     <style>
         .warning-table {
@@ -65,6 +66,8 @@
             text-decoration: underline;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -90,7 +93,7 @@
         <% if (warnings.length === 0) { %>
             <p>No warnings found. All sensor values are within safe ranges.</p>
         <% } else { %>
-            <table class="warning-table">
+            <table id="warningTable" class="warning-table display">
                 <thead>
                     <tr>
                         <th>Location</th>
@@ -116,5 +119,28 @@
             </table>
         <% } %>
     </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#warningTable').DataTable({
+                pageLength: 10,
+                lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, 'All']],
+                order: [[4, 'desc']], // Sort by timestamp column descending by default
+                language: {
+                    lengthMenu: "Show _MENU_ entries per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    },
+                    search: "Search:",
+                    zeroRecords: "No matching records found"
+                }
+            });
+        });
+    </script>
 </body>
 </html>

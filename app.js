@@ -105,6 +105,52 @@ const query = (sql, params = []) => {
     });
 };
 
+// Function to check if a value is outside safe range
+function checkWarning(parameter, value) {
+    if (!value || isNaN(value) || !CONFIG.SAFE_RANGES[parameter]) {
+        return null;
+    }
+
+    const range = CONFIG.SAFE_RANGES[parameter];
+    if (value < range.min || value > range.max) {
+        return {
+            parameter: range.name,
+            value: value,
+            unit: range.unit,
+            safeRange: `${range.min} - ${range.max}`,
+            recommendation: range.recommendation
+        };
+    }
+    return null;
+}
+
+// Initialize growing_areas table if it doesn't exist
+async function initializeGrowingAreasTable() {
+    try {
+        await query(`
+            CREATE TABLE IF NOT EXISTS growing_areas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                location VARCHAR(255) NOT NULL,
+                area FLOAT NOT NULL,
+                crop_type VARCHAR(255) NOT NULL,
+                status ENUM('active', 'inactive') DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        `);
+        console.log('Growing areas table initialized');
+    } catch (error) {
+        console.error('Error initializing growing areas table:', error);
+    }
+}
+
+// Call initialization
+initializeGrowingAreasTable();
+
 // Location cache to reduce API calls
 const locationCache = new Map();
 
@@ -150,6 +196,77 @@ function formatLocationName(data) {
     
     return parts.join(', ') || data.display_name || 'Unknown Location';
 }
+
+// Growing Areas Routes
+app.get('/growing-areas', authenticateUser, async (req, res) => {
+    try {
+        const areas = await query(
+            'SELECT * FROM growing_areas WHERE user_id = ? ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.render('growing-areas', { areas });
+    } catch (error) {
+        console.error('Error fetching growing areas:', error);
+        res.status(500).send('Error fetching growing areas');
+    }
+});
+
+app.post('/growing-areas/add', authenticateUser, async (req, res) => {
+    const { name, description, location, area, crop_type } = req.body;
+    try {
+        await query(
+            'INSERT INTO growing_areas (user_id, name, description, location, area, crop_type) VALUES (?, ?, ?, ?, ?, ?)',
+            [req.user.id, name, description, location, area, crop_type]
+        );
+        res.redirect('/growing-areas');
+    } catch (error) {
+        console.error('Error adding growing area:', error);
+        res.status(500).send('Error adding growing area');
+    }
+});
+
+app.get('/growing-areas/:id/edit', authenticateUser, async (req, res) => {
+    try {
+        const [area] = await query(
+            'SELECT * FROM growing_areas WHERE id = ? AND user_id = ?',
+            [req.params.id, req.user.id]
+        );
+        if (!area) {
+            return res.status(404).send('Growing area not found');
+        }
+        res.render('edit-growing-area', { area });
+    } catch (error) {
+        console.error('Error fetching growing area:', error);
+        res.status(500).send('Error fetching growing area');
+    }
+});
+
+app.post('/growing-areas/:id/update', authenticateUser, async (req, res) => {
+    const { name, description, location, area, crop_type, status } = req.body;
+    try {
+        await query(
+            'UPDATE growing_areas SET name = ?, description = ?, location = ?, area = ?, crop_type = ?, status = ? WHERE id = ? AND user_id = ?',
+            [name, description, location, area, crop_type, status, req.params.id, req.user.id]
+        );
+        res.redirect('/growing-areas');
+    } catch (error) {
+        console.error('Error updating growing area:', error);
+        res.status(500).send('Error updating growing area');
+    }
+});
+
+app.post('/growing-areas/:id/delete', authenticateUser, async (req, res) => {
+    try {
+        await query(
+            'DELETE FROM growing_areas WHERE id = ? AND user_id = ?',
+            [req.params.id, req.user.id]
+        );
+        res.redirect('/growing-areas');
+    } catch (error) {
+        console.error('Error deleting growing area:', error);
+        res.status(500).send('Error deleting growing area');
+    }
+});
 
 // Check if a value is outside safe range
 function checkWarning(parameter, value) {
