@@ -1,3 +1,4 @@
+// Dependencies
 const express = require('express');
 const mysql = require('mysql');
 const path = require('path');
@@ -79,7 +80,7 @@ const CONFIG = {
 // Initialize Express app
 const app = express();
 
-// App configuration
+// App configuration and middleware
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -87,7 +88,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// Database connection pool
+// Database setup
 const pool = mysql.createPool({
     ...CONFIG.DB,
     connectionLimit: 10,
@@ -95,7 +96,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Promisify database queries
+// Database helper function
 const query = (sql, params = []) => {
     return new Promise((resolve, reject) => {
         pool.query(sql, params, (error, results) => {
@@ -105,13 +106,11 @@ const query = (sql, params = []) => {
     });
 };
 
-// Function to check if a value is outside safe range
+// Helper Functions
 function checkWarning(parameter, value) {
-    if (!value || isNaN(value) || !CONFIG.SAFE_RANGES[parameter]) {
-        return null;
-    }
-
     const range = CONFIG.SAFE_RANGES[parameter];
+    if (!range || !value || isNaN(value)) return null;
+    
     if (value < range.min || value > range.max) {
         return {
             parameter: range.name,
@@ -124,37 +123,9 @@ function checkWarning(parameter, value) {
     return null;
 }
 
-// Initialize growing_areas table if it doesn't exist
-async function initializeGrowingAreasTable() {
-    try {
-        await query(`
-            CREATE TABLE IF NOT EXISTS growing_areas (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                description TEXT,
-                location VARCHAR(255) NOT NULL,
-                area FLOAT NOT NULL,
-                crop_type VARCHAR(255) NOT NULL,
-                status ENUM('active', 'inactive') DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-        `);
-        console.log('Growing areas table initialized');
-    } catch (error) {
-        console.error('Error initializing growing areas table:', error);
-    }
-}
-
-// Call initialization
-initializeGrowingAreasTable();
-
-// Location cache to reduce API calls
+// Location helper functions
 const locationCache = new Map();
 
-// Enhanced location name fetching with caching
 async function getLocationName(latitude, longitude) {
     const cacheKey = `${latitude},${longitude}`;
     
@@ -197,95 +168,6 @@ function formatLocationName(data) {
     return parts.join(', ') || data.display_name || 'Unknown Location';
 }
 
-// Growing Areas Routes
-app.get('/growing-areas', authenticateUser, async (req, res) => {
-    try {
-        const areas = await query(
-            'SELECT * FROM growing_areas WHERE user_id = ? ORDER BY created_at DESC',
-            [req.user.id]
-        );
-        res.render('growing-areas', { areas });
-    } catch (error) {
-        console.error('Error fetching growing areas:', error);
-        res.status(500).send('Error fetching growing areas');
-    }
-});
-
-app.post('/growing-areas/add', authenticateUser, async (req, res) => {
-    const { name, description, location, area, crop_type } = req.body;
-    try {
-        await query(
-            'INSERT INTO growing_areas (user_id, name, description, location, area, crop_type) VALUES (?, ?, ?, ?, ?, ?)',
-            [req.user.id, name, description, location, area, crop_type]
-        );
-        res.redirect('/growing-areas');
-    } catch (error) {
-        console.error('Error adding growing area:', error);
-        res.status(500).send('Error adding growing area');
-    }
-});
-
-app.get('/growing-areas/:id/edit', authenticateUser, async (req, res) => {
-    try {
-        const [area] = await query(
-            'SELECT * FROM growing_areas WHERE id = ? AND user_id = ?',
-            [req.params.id, req.user.id]
-        );
-        if (!area) {
-            return res.status(404).send('Growing area not found');
-        }
-        res.render('edit-growing-area', { area });
-    } catch (error) {
-        console.error('Error fetching growing area:', error);
-        res.status(500).send('Error fetching growing area');
-    }
-});
-
-app.post('/growing-areas/:id/update', authenticateUser, async (req, res) => {
-    const { name, description, location, area, crop_type, status } = req.body;
-    try {
-        await query(
-            'UPDATE growing_areas SET name = ?, description = ?, location = ?, area = ?, crop_type = ?, status = ? WHERE id = ? AND user_id = ?',
-            [name, description, location, area, crop_type, status, req.params.id, req.user.id]
-        );
-        res.redirect('/growing-areas');
-    } catch (error) {
-        console.error('Error updating growing area:', error);
-        res.status(500).send('Error updating growing area');
-    }
-});
-
-app.post('/growing-areas/:id/delete', authenticateUser, async (req, res) => {
-    try {
-        await query(
-            'DELETE FROM growing_areas WHERE id = ? AND user_id = ?',
-            [req.params.id, req.user.id]
-        );
-        res.redirect('/growing-areas');
-    } catch (error) {
-        console.error('Error deleting growing area:', error);
-        res.status(500).send('Error deleting growing area');
-    }
-});
-
-// Check if a value is outside safe range
-function checkWarning(parameter, value) {
-    const range = CONFIG.SAFE_RANGES[parameter];
-    if (!range) return null;
-    
-    if (value < range.min || value > range.max) {
-        return {
-            parameter: range.name,
-            value: value,
-            unit: range.unit,
-            safeRange: `${range.min} - ${range.max}`,
-            recommendation: range.recommendation
-        };
-    }
-    return null;
-}
-
-// Optimized location update function
 async function updateLocations() {
     try {
         const results = await query(
@@ -306,7 +188,32 @@ async function updateLocations() {
     }
 }
 
-// Start location updates
+// Database initialization
+async function initializeGrowingAreasTable() {
+    try {
+        await query(`
+            CREATE TABLE IF NOT EXISTS growing_areas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                location VARCHAR(255) NOT NULL,
+                area FLOAT NOT NULL,
+                crop_type VARCHAR(255) NOT NULL,
+                status ENUM('active', 'inactive') DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        `);
+        console.log('Growing areas table initialized');
+    } catch (error) {
+        console.error('Error initializing growing areas table:', error);
+    }
+}
+
+// Initialize database and start location updates
+initializeGrowingAreasTable();
 setInterval(updateLocations, CONFIG.LOCATION_UPDATE_INTERVAL);
 setTimeout(updateLocations, 1000); // Initial update
 
@@ -430,46 +337,78 @@ app.post('/devices/:id/toggle', authenticateUser, async (req, res) => {
     }
 });
 
-// Warning Route
-app.get('/warnings', authenticateUser, async (req, res) => {
+// Growing Areas Routes
+app.get('/growing-areas', authenticateUser, async (req, res) => {
     try {
-        const { fromDate = CONFIG.DEFAULT_DATE_RANGE.start, toDate = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
-        
-        const results = await query(`
-            SELECT r.*, DATE_FORMAT(r.timestamp, "%Y-%m-%d %H:%i:%s") as formatted_timestamp 
-            FROM readnpk r
-            JOIN devices d ON r.device_id = d.id
-            WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?
-            ORDER BY r.timestamp DESC
-        `, [req.user.id, fromDate, toDate]);
-
-        const warnings = [];
-        
-        results.forEach(reading => {
-            ['humidity', 'temperature', 'conductivity', 'ph', 'nitrogen', 'phosphorus', 'potassium'].forEach(param => {
-                const warning = checkWarning(param, reading[param]);
-                if (warning) {
-                    warnings.push({
-                        ...warning,
-                        location: reading.location,
-                        timestamp: reading.formatted_timestamp
-                    });
-                }
-            });
-        });
-
-        res.render('warning', { 
-            warnings,
-            fromDate,
-            toDate
-        });
+        const areas = await query(
+            'SELECT * FROM growing_areas WHERE user_id = ? ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.render('growing-areas', { areas });
     } catch (error) {
-        console.error('Warning route error:', error);
-        res.status(500).send('Server error');
+        console.error('Error fetching growing areas:', error);
+        res.status(500).send('Error fetching growing areas');
     }
 });
 
-// Protected Routes
+app.post('/growing-areas/add', authenticateUser, async (req, res) => {
+    const { name, description, location, area, crop_type } = req.body;
+    try {
+        await query(
+            'INSERT INTO growing_areas (user_id, name, description, location, area, crop_type) VALUES (?, ?, ?, ?, ?, ?)',
+            [req.user.id, name, description, location, area, crop_type]
+        );
+        res.redirect('/growing-areas');
+    } catch (error) {
+        console.error('Error adding growing area:', error);
+        res.status(500).send('Error adding growing area');
+    }
+});
+
+app.get('/growing-areas/:id/edit', authenticateUser, async (req, res) => {
+    try {
+        const [area] = await query(
+            'SELECT * FROM growing_areas WHERE id = ? AND user_id = ?',
+            [req.params.id, req.user.id]
+        );
+        if (!area) {
+            return res.status(404).send('Growing area not found');
+        }
+        res.render('edit-growing-area', { area });
+    } catch (error) {
+        console.error('Error fetching growing area:', error);
+        res.status(500).send('Error fetching growing area');
+    }
+});
+
+app.post('/growing-areas/:id/update', authenticateUser, async (req, res) => {
+    const { name, description, location, area, crop_type, status } = req.body;
+    try {
+        await query(
+            'UPDATE growing_areas SET name = ?, description = ?, location = ?, area = ?, crop_type = ?, status = ? WHERE id = ? AND user_id = ?',
+            [name, description, location, area, crop_type, status, req.params.id, req.user.id]
+        );
+        res.redirect('/growing-areas');
+    } catch (error) {
+        console.error('Error updating growing area:', error);
+        res.status(500).send('Error updating growing area');
+    }
+});
+
+app.post('/growing-areas/:id/delete', authenticateUser, async (req, res) => {
+    try {
+        await query(
+            'DELETE FROM growing_areas WHERE id = ? AND user_id = ?',
+            [req.params.id, req.user.id]
+        );
+        res.redirect('/growing-areas');
+    } catch (error) {
+        console.error('Error deleting growing area:', error);
+        res.status(500).send('Error deleting growing area');
+    }
+});
+
+// Data Routes
 app.get('/', authenticateUser, async (req, res) => {
     try {
         const { fromDate = CONFIG.DEFAULT_DATE_RANGE.start, toDate = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
@@ -511,6 +450,8 @@ app.get('/map', authenticateUser, async (req, res) => {
     }
 });
 
+app.get('/chart', authenticateUser, (req, res) => res.render('chart'));
+
 app.get('/getdata-chart', authenticateUser, async (req, res) => {
     try {
         const { start = CONFIG.DEFAULT_DATE_RANGE.start, end = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
@@ -539,8 +480,6 @@ app.get('/getdata-chart', authenticateUser, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch chart data' });
     }
 });
-
-app.get('/chart', authenticateUser, (req, res) => res.render('chart'));
 
 app.get('/export', authenticateUser, async (req, res) => {
     try {
