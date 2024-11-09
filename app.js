@@ -19,7 +19,7 @@ const CONFIG = {
         host: 'localhost',
         user: 'root',
         password: '',
-        database: 'test'
+        database: 'sensor_data'
     },
     LOCATION_UPDATE_INTERVAL: 60000, // 1 minute
     DEFAULT_DATE_RANGE: {
@@ -222,32 +222,7 @@ async function updateLocations() {
     }
 }
 
-// // Database initialization
-// async function initializeGrowingAreasTable() {
-//     try {
-//         await query(`
-//             CREATE TABLE IF NOT EXISTS growing_areas (
-//                 id INT AUTO_INCREMENT PRIMARY KEY,
-//                 user_id INT NOT NULL,
-//                 name VARCHAR(255) NOT NULL,
-//                 description TEXT,
-//                 location VARCHAR(255) NOT NULL,
-//                 area FLOAT NOT NULL,
-//                 crop_type VARCHAR(255) NOT NULL,
-//                 status ENUM('active', 'inactive') DEFAULT 'active',
-//                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-//                 FOREIGN KEY (user_id) REFERENCES users(id)
-//             )
-//         `);
-//         console.log('Growing areas table initialized');
-//     } catch (error) {
-//         console.error('Error initializing growing areas table:', error);
-//     }
-// }
-
 // Initialize database and start location updates
-// initializeGrowingAreasTable();
 setInterval(updateLocations, CONFIG.LOCATION_UPDATE_INTERVAL);
 setTimeout(updateLocations, 1000); // Initial update
 
@@ -443,10 +418,10 @@ app.get('/', authenticateUser, async (req, res) => {
         const { fromDate = CONFIG.DEFAULT_DATE_RANGE.start, toDate = CONFIG.DEFAULT_DATE_RANGE.end } = req.query;
         
         const results = await query(
-            `SELECT r.*, DATE_FORMAT(r.timestamp, "%Y-%m-%d %H:%i:%s") as formatted_timestamp 
+            `SELECT r.*, DATE_FORMAT(r.created_at, "%Y-%m-%d %H:%i:%s") as formatted_timestamp 
              FROM readnpk r
              JOIN devices d ON r.device_id = d.id
-             WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?`,
+             WHERE d.user_id = ? AND r.created_at BETWEEN ? AND ?`,
             [req.user.id, fromDate, toDate]
         );
         
@@ -463,8 +438,8 @@ app.get('/map', authenticateUser, async (req, res) => {
             WITH RankedData AS (
                 SELECT 
                     r.*,
-                    DATE_FORMAT(r.timestamp, '%Y-%m-%d %H:%i:%s') as formatted_timestamp,
-                    ROW_NUMBER() OVER (PARTITION BY r.latitude, r.longitude ORDER BY r.timestamp DESC) as rn
+                    DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i:%s') as formatted_timestamp,
+                    ROW_NUMBER() OVER (PARTITION BY r.latitude, r.longitude ORDER BY r.created_at DESC) as rn
                 FROM readnpk r
                 JOIN devices d ON r.device_id = d.id
                 WHERE d.user_id = ? AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
@@ -487,7 +462,7 @@ app.get('/getdata-chart', authenticateUser, async (req, res) => {
         
         const results = await query(`
             SELECT 
-                r.timestamp,
+                r.created_at as timestamp,
                 r.humidity,
                 r.temperature,
                 r.conductivity,
@@ -498,8 +473,8 @@ app.get('/getdata-chart', authenticateUser, async (req, res) => {
                 r.location
             FROM readnpk r
             JOIN devices d ON r.device_id = d.id
-            WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?
-            ORDER BY r.timestamp DESC
+            WHERE d.user_id = ? AND r.created_at BETWEEN ? AND ?
+            ORDER BY r.created_at DESC
             LIMIT 100
         `, [req.user.id, start, end]);
         
@@ -518,7 +493,7 @@ app.get('/export', authenticateUser, async (req, res) => {
             SELECT r.* 
             FROM readnpk r
             JOIN devices d ON r.device_id = d.id
-            WHERE d.user_id = ? AND r.timestamp BETWEEN ? AND ?
+            WHERE d.user_id = ? AND r.created_at BETWEEN ? AND ?
         `, [req.user.id, fromDate, toDate]);
 
         const workbook = new ExcelJS.Workbook();
@@ -538,7 +513,7 @@ app.get('/export', authenticateUser, async (req, res) => {
         ];
 
         results.forEach(row => {
-            const timestamp = new Date(row.timestamp);
+            const timestamp = new Date(row.created_at);
             worksheet.addRow({
                 date: timestamp.toLocaleDateString(),
                 time: timestamp.toLocaleTimeString(),

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/styles.css">
     <style>
         .warning-value {
-            color: #aa0f1f;
+            color: #aa0f1f !important;
             font-weight: bold;
         }
     </style>
@@ -28,6 +28,7 @@
             <a href="/map">Map</a>
             <a href="/growing-areas">Growing Areas</a>
             <a href="/devices">Devices and API Key</a>
+            <a href="/logout" style="color: #c74b58;">Logout</a>
         </nav>
 
         <h1>Data Report</h1>
@@ -60,10 +61,10 @@
                 <tbody>
                     <% data.forEach(row => { %>
                         <tr>
-                            <td data-order="<%= new Date(row.timestamp).getTime() %>">
-                                <%= new Date(row.timestamp).toLocaleDateString() %>
+                            <td data-order="<%= new Date(row.created_at).getTime() %>">
+                                <%= new Date(row.created_at).toLocaleDateString() %>
                             </td>
-                            <td><%= new Date(row.timestamp).toLocaleTimeString() %></td>
+                            <td><%= new Date(row.created_at).toLocaleTimeString() %></td>
                             <td class="<%= (row.humidity < 40 || row.humidity > 80) ? 'warning-value' : '' %>">
                                 <%= row.humidity %>
                             </td>
