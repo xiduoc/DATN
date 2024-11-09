@@ -9,6 +9,8 @@ const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser');
 const { authenticateUser, generateApiKey, JWT_SECRET } = require('./middleware/auth');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const fs = require('fs');
 
 // Configuration constants
 const CONFIG = {
@@ -87,6 +89,38 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadsDir)
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, uniqueSuffix + path.extname(file.originalname))
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    fileFilter: function(req, file, cb) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'));
+        }
+    },
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
 
 // Database setup
 const pool = mysql.createPool({
@@ -188,34 +222,45 @@ async function updateLocations() {
     }
 }
 
-// Database initialization
-async function initializeGrowingAreasTable() {
-    try {
-        await query(`
-            CREATE TABLE IF NOT EXISTS growing_areas (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                description TEXT,
-                location VARCHAR(255) NOT NULL,
-                area FLOAT NOT NULL,
-                crop_type VARCHAR(255) NOT NULL,
-                status ENUM('active', 'inactive') DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-        `);
-        console.log('Growing areas table initialized');
-    } catch (error) {
-        console.error('Error initializing growing areas table:', error);
-    }
-}
+// // Database initialization
+// async function initializeGrowingAreasTable() {
+//     try {
+//         await query(`
+//             CREATE TABLE IF NOT EXISTS growing_areas (
+//                 id INT AUTO_INCREMENT PRIMARY KEY,
+//                 user_id INT NOT NULL,
+//                 name VARCHAR(255) NOT NULL,
+//                 description TEXT,
+//                 location VARCHAR(255) NOT NULL,
+//                 area FLOAT NOT NULL,
+//                 crop_type VARCHAR(255) NOT NULL,
+//                 status ENUM('active', 'inactive') DEFAULT 'active',
+//                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+//                 FOREIGN KEY (user_id) REFERENCES users(id)
+//             )
+//         `);
+//         console.log('Growing areas table initialized');
+//     } catch (error) {
+//         console.error('Error initializing growing areas table:', error);
+//     }
+// }
 
 // Initialize database and start location updates
-initializeGrowingAreasTable();
+// initializeGrowingAreasTable();
 setInterval(updateLocations, CONFIG.LOCATION_UPDATE_INTERVAL);
 setTimeout(updateLocations, 1000); // Initial update
+
+// Image Upload Route
+app.post('/upload-image', authenticateUser, upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    // Return the URL of the uploaded file
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ location: imageUrl });
+});
 
 // Authentication Routes
 app.get('/register', (req, res) => {
@@ -362,22 +407,6 @@ app.post('/growing-areas/add', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error('Error adding growing area:', error);
         res.status(500).send('Error adding growing area');
-    }
-});
-
-app.get('/growing-areas/:id/edit', authenticateUser, async (req, res) => {
-    try {
-        const [area] = await query(
-            'SELECT * FROM growing_areas WHERE id = ? AND user_id = ?',
-            [req.params.id, req.user.id]
-        );
-        if (!area) {
-            return res.status(404).send('Growing area not found');
-        }
-        res.render('edit-growing-area', { area });
-    } catch (error) {
-        console.error('Error fetching growing area:', error);
-        res.status(500).send('Error fetching growing area');
     }
 });
 
