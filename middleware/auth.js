@@ -27,10 +27,24 @@ const authenticateUser = (req, res, next) => {
     }
 };
 
-// ESP32 authentication middleware  
+// ESP32 authentication middleware with URL API key support
 const authenticateDevice = async (req, res, next) => {
-    const apiKey = req.headers['x-api-key'];
-    if (!apiKey) return res.status(401).json({ error: 'No API key provided' });
+    // Check for API key in URL query parameters first
+    const urlApiKey = req.query.api_key;
+    // Then check headers as fallback
+    const headerApiKey = req.headers['x-api-key'];
+    
+    // Use URL API key if present, otherwise use header API key
+    const apiKey = urlApiKey || headerApiKey;
+
+    console.log('URL API Key:', urlApiKey); // Debug log
+    console.log('Header API Key:', headerApiKey); // Debug log
+    console.log('Final API Key:', apiKey); // Debug log
+    
+    if (!apiKey) {
+        console.log('No API key found in request'); // Debug log
+        return res.status(401).json({ error: 'No API key provided' });
+    }
 
     try {
         const device = await new Promise((resolve, reject) => {
@@ -47,6 +61,7 @@ const authenticateDevice = async (req, res, next) => {
         });
 
         if (!device) {
+            console.log('Invalid or inactive API key:', apiKey); // Debug log
             return res.status(401).json({ error: 'Invalid or inactive API key' });
         }
         

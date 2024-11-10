@@ -9,7 +9,11 @@ const port = 3000;
 
 // Configure CORS
 app.use(cors());
+
+// Configure body parsers before routes
+// Support URL-encoded bodies
 app.use(bodyParser.urlencoded({ extended: true }));
+// Support JSON-encoded bodies
 app.use(bodyParser.json());
 
 // MySQL connection pool
@@ -33,6 +37,9 @@ const query = (sql, params = []) => {
 
 // API endpoint to receive data from ESP32
 app.post('/insert', authenticateDevice, async (req, res) => {
+    console.log('Received request body:', req.body); // Debug log
+    console.log('Received query params:', req.query); // Debug log
+
     const { 
         Humidity, 
         Temperature, 
