@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Locations Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/styles.css">
     <style>
         #map {
-            height: 85vh;
+            height: 82vh;
             width: 100%;
         }
         .info-box {
@@ -25,28 +26,6 @@
         .sensor-popup th {
             background-color: #f5f5f5;
         }
-        .navigation {
-            margin-bottom: 20px;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .navigation a {
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-            margin-right: 15px;
-            padding: 5px 10px;
-            border-radius: 3px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .navigation a:hover {
-            background-color: #e2e6ea;
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -59,9 +38,10 @@
             <a href="/devices">Devices and API Key</a>
             <a href="/logout" style="color: #c74b58;">Logout</a>
         </nav>
-
-        <h1>Locations Map</h1>
     </div>
+
+    <h1>Locations Map</h1>
+
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
