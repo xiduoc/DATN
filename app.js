@@ -19,7 +19,7 @@ const CONFIG = {
         host: 'localhost',
         user: 'root',
         password: '',
-        database: 'sensor_data'
+        database: 'data'
     },
     LOCATION_UPDATE_INTERVAL: 60000, // 1 minute
     DEFAULT_DATE_RANGE: {

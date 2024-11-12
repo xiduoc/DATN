@@ -3,6 +3,7 @@ const mysql = require('mysql');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { authenticateDevice } = require('./middleware/auth');
+const { initializeDatabase } = require('./database/init');
 
 const app = express();
 const port = 3000;
@@ -21,7 +22,7 @@ const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'sensor_data',
+    database: 'data',
     connectionLimit: 10
 });
 
@@ -127,7 +128,21 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Start server
-app.listen(port, () => {
-    console.log(`API Server running at http://localhost:${port}`);
-});
+// Initialize database and start server
+async function startServer() {
+    try {
+        // Initialize database tables
+        await initializeDatabase();
+        
+        // Start server
+        app.listen(port, () => {
+            console.log(`API Server running at http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error('Failed to initialize database:', error);
+        process.exit(1);
+    }
+}
+
+// Start the server
+startServer();
