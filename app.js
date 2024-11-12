@@ -12,6 +12,9 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const fs = require('fs');
 
+// Import admin routes
+const adminRoutes = require('./routes/admin');
+
 // Configuration constants
 const CONFIG = {
     PORT: 3001,
@@ -130,6 +133,33 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// Initialize admin table
+const initializeAdminTable = async () => {
+    try {
+        const adminSQL = fs.readFileSync(path.join(__dirname, 'database', 'admin.sql'), 'utf8');
+        const statements = adminSQL
+            .split(';')
+            .map(statement => statement.trim())
+            .filter(statement => statement.length > 0);
+
+        for (const statement of statements) {
+            await new Promise((resolve, reject) => {
+                pool.query(statement, (err) => {
+                    if (err && !err.code.includes('ER_TABLE_EXISTS')) {
+                        reject(err);
+                    }
+                    resolve();
+                });
+            });
+        }
+        console.log('Admin table initialized successfully');
+    } catch (error) {
+        console.error('Error initializing admin table:', error);
+    }
+};
+
+initializeAdminTable();
+
 // Database helper function
 const query = (sql, params = []) => {
     return new Promise((resolve, reject) => {
@@ -225,6 +255,9 @@ async function updateLocations() {
 // Initialize database and start location updates
 setInterval(updateLocations, CONFIG.LOCATION_UPDATE_INTERVAL);
 setTimeout(updateLocations, 1000); // Initial update
+
+// Mount admin routes
+app.use('/admin', adminRoutes);
 
 // Image Upload Route
 app.post('/upload-image', authenticateUser, upload.single('file'), (req, res) => {
