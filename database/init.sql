@@ -7,7 +7,7 @@ SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
 
 -- Create users table first since it's referenced by other tables
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -16,8 +16,20 @@ CREATE TABLE users (
     status ENUM('active', 'inactive') DEFAULT 'active'
 );
 
+-- Create admin table
+CREATE TABLE IF NOT EXISTS admin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default admin user (password will be hashed during first login)
+INSERT INTO admin (username, password) VALUES ('admin', 'admin')
+ON DUPLICATE KEY UPDATE id=id;
+
 -- Create devices table which references users
-CREATE TABLE devices (
+CREATE TABLE IF NOT EXISTS devices (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     api_key VARCHAR(64) UNIQUE NOT NULL,
@@ -28,7 +40,7 @@ CREATE TABLE devices (
 );
 
 -- Create readnpk table which references both users and devices
-CREATE TABLE readnpk (
+CREATE TABLE IF NOT EXISTS readnpk (
     id INT AUTO_INCREMENT PRIMARY KEY,
     humidity FLOAT NOT NULL,
     temperature FLOAT NOT NULL,
@@ -48,7 +60,7 @@ CREATE TABLE readnpk (
 );
 
 -- Create growing_areas table which references users
-CREATE TABLE growing_areas (
+CREATE TABLE IF NOT EXISTS growing_areas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_vietnamese_ci NOT NULL,
