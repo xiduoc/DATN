@@ -465,6 +465,94 @@ app.get('/', authenticateUser, async (req, res) => {
     }
 });
 
+// API Routes for Data Management
+app.put('/api/data/:id', authenticateUser, async (req, res) => {
+    const { id } = req.params;
+    const { humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location } = req.body;
+
+    try {
+        // Verify the data belongs to the user
+        const [data] = await query(
+            `SELECT r.* FROM readnpk r
+             JOIN devices d ON r.device_id = d.id
+             WHERE r.id = ? AND d.user_id = ?`,
+            [id, req.user.id]
+        );
+
+        if (!data) {
+            return res.status(404).json({ error: 'Data not found or unauthorized' });
+        }
+
+        await query(
+            `UPDATE readnpk SET 
+             humidity = ?, temperature = ?, conductivity = ?, ph = ?,
+             nitrogen = ?, phosphorus = ?, potassium = ?, location = ?
+             WHERE id = ?`,
+            [humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location, id]
+        );
+
+        res.json({ message: 'Data updated successfully' });
+    } catch (error) {
+        console.error('Error updating data:', error);
+        res.status(500).json({ error: 'Failed to update data' });
+    }
+});
+
+app.delete('/api/data/:id', authenticateUser, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Verify the data belongs to the user
+        const [data] = await query(
+            `SELECT r.* FROM readnpk r
+             JOIN devices d ON r.device_id = d.id
+             WHERE r.id = ? AND d.user_id = ?`,
+            [id, req.user.id]
+        );
+
+        if (!data) {
+            return res.status(404).json({ error: 'Data not found or unauthorized' });
+        }
+
+        await query('DELETE FROM readnpk WHERE id = ?', [id]);
+        res.json({ message: 'Data deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting data:', error);
+        res.status(500).json({ error: 'Failed to delete data' });
+    }
+});
+
+app.post('/api/data', authenticateUser, async (req, res) => {
+    const { humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location } = req.body;
+
+    try {
+        // Get the user's first active device
+        const [device] = await query(
+            'SELECT id FROM devices WHERE user_id = ? AND status = "active" LIMIT 1',
+            [req.user.id]
+        );
+
+        if (!device) {
+            return res.status(400).json({ error: 'No active device found' });
+        }
+
+        const result = await query(
+            `INSERT INTO readnpk 
+             (device_id, humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [device.id, humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location]
+        );
+
+        res.json({ 
+            message: 'Data added successfully',
+            id: result.insertId
+        });
+    } catch (error) {
+        console.error('Error adding data:', error);
+        res.status(500).json({ error: 'Failed to add data' });
+    }
+});
+
 app.get('/map', authenticateUser, async (req, res) => {
     try {
         const results = await query(`
