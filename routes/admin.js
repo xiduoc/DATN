@@ -76,6 +76,81 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
     }
 });
 
+// Add New User
+router.post('/users/add', authenticateAdmin, async (req, res) => {
+    const { username, email, password } = req.body;
+
+    try {
+        // Check if username or email already exists
+        const existingUser = await query(
+            'SELECT * FROM users WHERE username = ? OR email = ?',
+            [username, email]
+        );
+
+        if (existingUser.length > 0) {
+            return res.status(400).send('Username or email already exists');
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert new user
+        await query(
+            'INSERT INTO users (username, email, password, status) VALUES (?, ?, ?, ?)',
+            [username, email, hashedPassword, 'active']
+        );
+
+        res.redirect('/admin/dashboard');
+    } catch (error) {
+        console.error('Error adding user:', error);
+        res.status(500).send('Error adding user');
+    }
+});
+
+// Delete User
+router.post('/users/:id/delete', authenticateAdmin, async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        // First get all devices for this user
+        const devices = await query('SELECT id FROM devices WHERE user_id = ?', [userId]);
+        
+        // Delete readnpk records for all user's devices
+        for (const device of devices) {
+            await query('DELETE FROM readnpk WHERE device_id = ?', [device.id]);
+        }
+        
+        // Then delete the devices
+        await query('DELETE FROM devices WHERE user_id = ?', [userId]);
+        
+        // Finally delete the user
+        await query('DELETE FROM users WHERE id = ?', [userId]);
+        
+        res.redirect('/admin/dashboard');
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).send('Error deleting user');
+    }
+});
+
+// Delete Device
+router.post('/devices/:id/delete', authenticateAdmin, async (req, res) => {
+    const deviceId = req.params.id;
+
+    try {
+        // First delete related records from readnpk table
+        await query('DELETE FROM readnpk WHERE device_id = ?', [deviceId]);
+        
+        // Then delete the device
+        await query('DELETE FROM devices WHERE id = ?', [deviceId]);
+        
+        res.redirect('/admin/dashboard');
+    } catch (error) {
+        console.error('Error deleting device:', error);
+        res.status(500).send('Error deleting device');
+    }
+});
+
 // Toggle User Status
 router.post('/users/:id/toggle', authenticateAdmin, async (req, res) => {
     const userId = req.params.id;
