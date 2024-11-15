@@ -120,7 +120,13 @@ router.post('/users/:id/delete', authenticateAdmin, async (req, res) => {
             await query('DELETE FROM readnpk WHERE device_id = ?', [device.id]);
         }
         
-        // Then delete the devices
+        // Delete readnpk records associated with the user
+        await query('DELETE FROM readnpk WHERE user_id = ?', [userId]);
+        
+        // Delete growing areas associated with the user
+        await query('DELETE FROM growing_areas WHERE user_id = ?', [userId]);
+        
+        // Delete the devices
         await query('DELETE FROM devices WHERE user_id = ?', [userId]);
         
         // Finally delete the user

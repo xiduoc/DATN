@@ -13,12 +13,30 @@ const pool = mysql.createPool({
 });
 
 // Web authentication middleware
-const authenticateUser = (req, res, next) => {
+const authenticateUser = async (req, res, next) => {
     const token = req.cookies.token;
     if (!token) return res.redirect('/login');
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // Verify that the user still exists in the database
+        const user = await new Promise((resolve, reject) => {
+            pool.query(
+                'SELECT id, username FROM users WHERE id = ? AND status = "active"',
+                [decoded.id],
+                (err, results) => {
+                    if (err) reject(err);
+                    resolve(results[0]);
+                }
+            );
+        });
+
+        if (!user) {
+            res.clearCookie('token');
+            return res.redirect('/login');
+        }
+
         req.user = decoded;
         next();
     } catch (err) {
