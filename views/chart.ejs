@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Previous head and style sections remain unchanged -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,6 +67,7 @@
     </style>
 </head>
 <body class="bg-light">
+    <!-- Previous HTML structure remains unchanged -->
     <div class="container-fluid py-4">
         <!-- Navigation Link -->
         <nav class="navigation">
@@ -413,7 +415,7 @@
         // Lấy dữ liệu từ API
         async function fetchData(fromDate = null, toDate = null) {
             try {
-                let url = '/getdata-chart';
+                let url = '/api/data/chart';  // Updated endpoint
                 if (fromDate && toDate) {
                     url += `?start=${fromDate}&end=${toDate}`;
                 }
@@ -432,7 +434,7 @@
         // Lấy thêm dữ liệu khi pan
         async function fetchMoreData(panOffset) {
             try {
-                const response = await fetch(`/getdata-chart?start=${new Date(panOffset).toISOString()}`);
+                const response = await fetch(`/api/data/chart?start=${new Date(panOffset).toISOString()}`);  // Updated endpoint
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 if (data.length > 0) {
