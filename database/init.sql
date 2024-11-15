@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS readnpk (
     user_id INT,
     device_id INT,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (device_id) REFERENCES devices(id)
+    FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL
 );
 
 -- Create growing_areas table which references users

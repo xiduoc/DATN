@@ -12,9 +12,9 @@ router.get('/', authenticateUser, async (req, res) => {
         const results = await query(
             `SELECT r.*, DATE_FORMAT(r.created_at, "%Y-%m-%d %H:%i:%s") as formatted_timestamp 
              FROM readnpk r
-             JOIN devices d ON r.device_id = d.id
-             WHERE d.user_id = ? AND r.created_at BETWEEN ? AND ?`,
-            [req.user.id, fromDate, toDate]
+             LEFT JOIN devices d ON r.device_id = d.id
+             WHERE (d.user_id = ? OR r.user_id = ?) AND r.created_at BETWEEN ? AND ?`,
+            [req.user.id, req.user.id, fromDate, toDate]
         );
         
         res.render('index', { data: results });
@@ -34,11 +34,11 @@ router.get('/map', authenticateUser, async (req, res) => {
                     DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i:%s') as formatted_timestamp,
                     ROW_NUMBER() OVER (PARTITION BY r.latitude, r.longitude ORDER BY r.created_at DESC) as rn
                 FROM readnpk r
-                JOIN devices d ON r.device_id = d.id
-                WHERE d.user_id = ? AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
+                LEFT JOIN devices d ON r.device_id = d.id
+                WHERE (d.user_id = ? OR r.user_id = ?) AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
             )
             SELECT * FROM RankedData WHERE rn = 1
-        `, [req.user.id]);
+        `, [req.user.id, req.user.id]);
         
         res.render('map', { points: results });
     } catch (error) {

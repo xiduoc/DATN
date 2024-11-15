@@ -144,8 +144,18 @@ router.post('/devices/:id/delete', authenticateAdmin, async (req, res) => {
     const deviceId = req.params.id;
 
     try {
-        // First delete related records from readnpk table
-        await query('DELETE FROM readnpk WHERE device_id = ?', [deviceId]);
+        // First get the device's user_id
+        const [device] = await query('SELECT user_id FROM devices WHERE id = ?', [deviceId]);
+        
+        if (!device) {
+            return res.status(404).send('Device not found');
+        }
+
+        // Update readnpk records to set user_id and remove device_id
+        await query(
+            'UPDATE readnpk SET user_id = ?, device_id = NULL WHERE device_id = ?',
+            [device.user_id, deviceId]
+        );
         
         // Then delete the device
         await query('DELETE FROM devices WHERE id = ?', [deviceId]);

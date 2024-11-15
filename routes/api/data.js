@@ -22,11 +22,11 @@ router.get('/chart', authenticateUser, async (req, res) => {
                 r.potassium,
                 r.location
             FROM readnpk r
-            JOIN devices d ON r.device_id = d.id
-            WHERE d.user_id = ? AND r.created_at BETWEEN ? AND ?
+            LEFT JOIN devices d ON r.device_id = d.id
+            WHERE (d.user_id = ? OR r.user_id = ?) AND r.created_at BETWEEN ? AND ?
             ORDER BY r.created_at DESC
             LIMIT 100
-        `, [req.user.id, start, end]);
+        `, [req.user.id, req.user.id, start, end]);
         
         res.json(results);
     } catch (error) {
@@ -44,9 +44,9 @@ router.put('/:id', authenticateUser, async (req, res) => {
         // Verify the data belongs to the user
         const [data] = await query(
             `SELECT r.* FROM readnpk r
-             JOIN devices d ON r.device_id = d.id
-             WHERE r.id = ? AND d.user_id = ?`,
-            [id, req.user.id]
+             LEFT JOIN devices d ON r.device_id = d.id
+             WHERE r.id = ? AND (d.user_id = ? OR r.user_id = ?)`,
+            [id, req.user.id, req.user.id]
         );
 
         if (!data) {
@@ -76,9 +76,9 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         // Verify the data belongs to the user
         const [data] = await query(
             `SELECT r.* FROM readnpk r
-             JOIN devices d ON r.device_id = d.id
-             WHERE r.id = ? AND d.user_id = ?`,
-            [id, req.user.id]
+             LEFT JOIN devices d ON r.device_id = d.id
+             WHERE r.id = ? AND (d.user_id = ? OR r.user_id = ?)`,
+            [id, req.user.id, req.user.id]
         );
 
         if (!data) {
@@ -104,15 +104,11 @@ router.post('/', authenticateUser, async (req, res) => {
             [req.user.id]
         );
 
-        if (!device) {
-            return res.status(400).json({ error: 'No active device found' });
-        }
-
         const result = await query(
             `INSERT INTO readnpk 
-             (device_id, humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [device.id, humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location]
+             (device_id, user_id, humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [device ? device.id : null, req.user.id, humidity, temperature, conductivity, ph, nitrogen, phosphorus, potassium, location]
         );
 
         res.json({ 
@@ -133,9 +129,9 @@ router.get('/export', authenticateUser, async (req, res) => {
         const results = await query(`
             SELECT r.* 
             FROM readnpk r
-            JOIN devices d ON r.device_id = d.id
-            WHERE d.user_id = ? AND r.created_at BETWEEN ? AND ?
-        `, [req.user.id, fromDate, toDate]);
+            LEFT JOIN devices d ON r.device_id = d.id
+            WHERE (d.user_id = ? OR r.user_id = ?) AND r.created_at BETWEEN ? AND ?
+        `, [req.user.id, req.user.id, fromDate, toDate]);
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sensor Data');
