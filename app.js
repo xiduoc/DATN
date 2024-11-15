@@ -136,7 +136,7 @@ const pool = mysql.createPool({
 // Initialize admin table
 const initializeAdminTable = async () => {
     try {
-        const adminSQL = fs.readFileSync(path.join(__dirname, 'database', 'admin.sql'), 'utf8');
+        const adminSQL = fs.readFileSync(path.join(__dirname, 'database', 'init.sql'), 'utf8');
         const statements = adminSQL
             .split(';')
             .map(statement => statement.trim())
@@ -152,9 +152,9 @@ const initializeAdminTable = async () => {
                 });
             });
         }
-        console.log('Admin table initialized successfully');
+        console.log('Database initialized successfully');
     } catch (error) {
-        console.error('Error initializing admin table:', error);
+        console.error('Error initializing database:', error);
     }
 };
 
