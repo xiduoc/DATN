@@ -1,5 +1,5 @@
-const fetch = require('node-fetch');
-const config = require('../config/config');
+import fetch from 'node-fetch';
+import config from '../config/config.js';
 
 // Location cache
 const locationCache = new Map();
@@ -86,7 +86,7 @@ async function updateLocations(query) {
     }
 }
 
-module.exports = {
+export {
     checkWarning,
     getLocationName,
     formatLocationName,

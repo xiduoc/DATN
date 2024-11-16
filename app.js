@@ -1,19 +1,24 @@
 // Dependencies
-const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const config = require('./config/config');
-const { query } = require('./config/database');
-const { updateLocations } = require('./utils/helpers');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import config from './config/config.js';
+import { query } from './config/database.js';
+import { updateLocations } from './utils/helpers.js';
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const deviceRoutes = require('./routes/devices');
-const growingAreaRoutes = require('./routes/growing-areas');
-const dataRoutes = require('./routes/api/data');
-const mainRoutes = require('./routes/main');
-const adminRoutes = require('./routes/admin');
+import authRoutes from './routes/auth.js';
+import deviceRoutes from './routes/devices.js';
+import growingAreaRoutes from './routes/growing-areas.js';
+import dataRoutes from './routes/api/data.js';
+import mainRoutes from './routes/main.js';
+import adminRoutes from './routes/admin.js';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Initialize Express app
 const app = express();

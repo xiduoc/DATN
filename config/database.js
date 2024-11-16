@@ -1,7 +1,12 @@
-const mysql = require('mysql');
-const fs = require('fs');
-const path = require('path');
-const config = require('./config');
+import mysql from 'mysql';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import config from './config.js';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create connection pool
 const pool = mysql.createPool({
@@ -49,7 +54,8 @@ const initializeAdminTable = async () => {
 // Initialize database
 initializeAdminTable();
 
-module.exports = {
+export {
     pool,
-    query
+    query,
+    initializeAdminTable
 };

@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { authenticateAdmin, ADMIN_JWT_SECRET, query } from '../middleware/adminAuth.js';
+
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { authenticateAdmin, ADMIN_JWT_SECRET, query } = require('../middleware/adminAuth');
 
 // Admin Login Page
 router.get('/login', (req, res) => {
@@ -244,4 +245,4 @@ router.get('/logout', (req, res) => {
     res.redirect('/admin/login');
 });
 
-module.exports = router;
+export default router;

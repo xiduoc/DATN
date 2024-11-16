@@ -1,9 +1,11 @@
-const express = require('express');
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../middleware/auth.js';
+import { query } from '../config/database.js';
+import config from '../config/config.js';
+
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../middleware/auth');
-const { query } = require('../config/database');
 
 // Register page
 router.get('/register', (req, res) => {
@@ -55,7 +57,7 @@ router.post('/login', async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: config.NODE_ENV === 'production',
             maxAge: 24 * 60 * 60 * 1000 // 24 hours
         });
 
@@ -72,4 +74,4 @@ router.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-module.exports = router;
+export default router;

@@ -1,6 +1,7 @@
-const jwt = require('jsonwebtoken');
-const mysql = require('mysql');
-const bcrypt = require('bcryptjs');
+import jwt from 'jsonwebtoken';
+import mysql from 'mysql';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const JWT_SECRET = 'your-secret-key'; // Change this to a secure key in production
 
@@ -93,12 +94,12 @@ const authenticateDevice = async (req, res, next) => {
 
 // Generate API key for devices
 const generateApiKey = () => {
-    return require('crypto').randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString('hex');
 };
 
-module.exports = { 
+export { 
     authenticateUser, 
     authenticateDevice, 
     generateApiKey,
-    JWT_SECRET 
+    JWT_SECRET
 };

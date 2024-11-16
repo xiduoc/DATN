@@ -1,4 +1,5 @@
-module.exports = {
+const config = {
+    NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: 3001,
     DB: {
         host: 'localhost',
@@ -63,3 +64,5 @@ module.exports = {
         }
     }
 };
+
+export default config;

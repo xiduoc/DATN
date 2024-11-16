@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { authenticateUser } from '../middleware/auth.js';
+import { query } from '../config/database.js';
+import config from '../config/config.js';
+
 const router = express.Router();
-const { authenticateUser } = require('../middleware/auth');
-const { query } = require('../config/database');
-const config = require('../config/config');
 
 // Dashboard
 router.get('/', authenticateUser, async (req, res) => {
@@ -52,4 +53,4 @@ router.get('/chart', authenticateUser, (req, res) => {
     res.render('chart');
 });
 
-module.exports = router;
+export default router;

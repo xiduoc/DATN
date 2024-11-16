@@ -1,9 +1,9 @@
-const express = require('express');
-const mysql = require('mysql');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { authenticateDevice } = require('./middleware/auth');
-const { initializeDatabase } = require('./database/init');
+import express from 'express';
+import mysql from 'mysql';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import { authenticateDevice } from './middleware/auth.js';
+import { initializeDatabase } from './database/init.js';
 
 const app = express();
 const port = 3000;

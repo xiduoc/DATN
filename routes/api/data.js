@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+import { authenticateUser } from '../../middleware/auth.js';
+import { query } from '../../config/database.js';
+import config from '../../config/config.js';
+import ExcelJS from 'exceljs';
+
 const router = express.Router();
-const { authenticateUser } = require('../../middleware/auth');
-const { query } = require('../../config/database');
-const config = require('../../config/config');
-const ExcelJS = require('exceljs');
 
 // Get chart data
 router.get('/chart', authenticateUser, async (req, res) => {
@@ -176,4 +177,4 @@ router.get('/export', authenticateUser, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

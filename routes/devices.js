@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { authenticateUser, generateApiKey } from '../middleware/auth.js';
+import { query } from '../config/database.js';
+
 const router = express.Router();
-const { authenticateUser, generateApiKey } = require('../middleware/auth');
-const { query } = require('../config/database');
 
 // Get all devices
 router.get('/', authenticateUser, async (req, res) => {
@@ -62,4 +63,4 @@ router.post('/:id/toggle', authenticateUser, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

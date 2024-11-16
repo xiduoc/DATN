@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const mysql = require('mysql');
-const bcrypt = require('bcryptjs');
+import jwt from 'jsonwebtoken';
+import mysql from 'mysql';
+import bcrypt from 'bcryptjs';
 
 const ADMIN_JWT_SECRET = 'admin-secret-key'; // Change this in production
 
@@ -37,7 +37,7 @@ const query = (sql, params = []) => {
     });
 };
 
-module.exports = { 
+export { 
     authenticateAdmin,
     ADMIN_JWT_SECRET,
     query
