@@ -7,12 +7,14 @@
     "chartjs-plugin-zoom": "^2.0.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto-random-string": "^5.0.0",
     "ejs": "^3.1.10",
     "exceljs": "^4.4.0",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.16"
   }
 }
