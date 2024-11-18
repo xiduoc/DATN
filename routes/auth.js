@@ -18,9 +18,10 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Validate Gmail address
-function isValidGmail(email) {
-    return email.toLowerCase().endsWith('@gmail.com');
+// Validate email address
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 }
 
 // Register page
@@ -32,10 +33,10 @@ router.get('/register', (req, res) => {
 router.post('/register', async (req, res) => {
     const { username, email, password, confirm_password } = req.body;
     
-    // Validate Gmail
-    if (!isValidGmail(email)) {
+    // Validate email
+    if (!isValidEmail(email)) {
         return res.render('register', { 
-            error: 'Please use a valid Gmail address' 
+            error: 'Please enter a valid email address' 
         });
     }
 
@@ -50,7 +51,7 @@ router.post('/register', async (req, res) => {
         const existingUsers = await query('SELECT * FROM users WHERE email = ?', [email]);
         if (existingUsers.length > 0) {
             return res.render('register', { 
-                error: 'This Gmail address is already registered' 
+                error: 'This email address is already registered' 
             });
         }
 
@@ -113,10 +114,10 @@ router.get('/forgot-password', (req, res) => {
 router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
 
-    // Validate Gmail
-    if (!isValidGmail(email)) {
+    // Validate email
+    if (!isValidEmail(email)) {
         return res.render('forgot-password', { 
-            error: 'Please enter a valid Gmail address' 
+            error: 'Please enter a valid email address' 
         });
     }
 
@@ -125,7 +126,7 @@ router.post('/forgot-password', async (req, res) => {
         const users = await query('SELECT * FROM users WHERE email = ?', [email]);
         if (users.length === 0) {
             return res.render('forgot-password', { 
-                error: 'No account found with that Gmail address' 
+                error: 'No account found with that email address' 
             });
         }
 
@@ -157,7 +158,7 @@ router.post('/forgot-password', async (req, res) => {
 
         await transporter.sendMail(mailOptions);
         res.render('forgot-password', { 
-            success: 'Password reset link has been sent to your Gmail' 
+            success: 'Password reset link has been sent to your email' 
         });
 
     } catch (error) {
