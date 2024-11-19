@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Previous head section remains unchanged -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,7 +53,7 @@
             color: #666;
         }
         .date-selection {
-            margin: 20px auto;
+            margin: 10px auto;
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 5px;
@@ -96,12 +95,6 @@
         </nav>
 
         <h1 class="text-center">Sensor Data Dashboard</h1>
-
-        <div class="row mb-4">
-            <div class="col">       
-                <p id="updateTime" class="text-center">Last updated: <span></span></p>
-            </div>
-        </div>
 
         <!-- Date Selection -->
         <div class="row">
@@ -179,7 +172,6 @@
     </div>
 
     <script>
-        // Rest of the JavaScript code remains unchanged
         let charts = {};
         let dataBuffer = {
             tempHumid: [],
@@ -433,9 +425,6 @@
             charts.npk.data.datasets[1].data = dataBuffer.npk.map(item => item.phosphorus);
             charts.npk.data.datasets[2].data = dataBuffer.npk.map(item => item.potassium);
             charts.npk.update();
-
-            // Update last update time
-            document.querySelector('#updateTime span').textContent = new Date().toLocaleString();
         }
 
         // Lấy dữ liệu từ API
