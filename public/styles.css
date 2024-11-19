@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
     background: white;
@@ -209,6 +209,27 @@ table.dataTable tbody td {
     padding: 10px 15px;
     border-bottom: 1px solid #dee2e6;
     color: #555;
+}
+
+/* Location column truncation */
+table.dataTable tbody td:nth-child(10) {
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+}
+
+table.dataTable tbody td:nth-child(10):hover {
+    overflow: visible;
+    white-space: normal;
+    background-color: #f8f9fa;
+    position: absolute;
+    z-index: 1;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
 }
 
 table.dataTable tbody tr:hover {

@@ -161,7 +161,7 @@
                             <td class="<%= (row.potassium < 150 || row.potassium > 300) ? 'warning-value' : '' %>">
                                 <%= row.potassium %>
                             </td>
-                            <td><%= row.location || 'N/A' %></td>
+                            <td title="<%= row.location || 'N/A' %>"><%= row.location || 'N/A' %></td>
                             <td>
                                 <div class="action-buttons">
                                     <button class="edit-btn" onclick="openEditModal(this)">
