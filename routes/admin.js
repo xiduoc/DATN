@@ -5,6 +5,11 @@ import { authenticateAdmin, ADMIN_JWT_SECRET, query } from '../middleware/adminA
 
 const router = express.Router();
 
+// Root admin route - will redirect to dashboard if authenticated, or login if not
+router.get('/', authenticateAdmin, (req, res) => {
+    res.redirect('/admin/dashboard');
+});
+
 // Admin Login Page
 router.get('/login', (req, res) => {
     res.render('admin/login');
