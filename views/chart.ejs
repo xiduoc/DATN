@@ -9,6 +9,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.2.1/chartjs-plugin-zoom.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        h1 {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
         .chart-container {
             margin: 20px 40px;
             padding: 15px;
@@ -89,10 +95,10 @@
             <a href="/logout" style="color: #c74b58;">Logout</a>
         </nav>
 
-        <!-- Header -->
+        <h1 class="text-center">Sensor Data Dashboard</h1>
+
         <div class="row mb-4">
-            <div class="col">
-                <h2 class="text-center">Sensor Data Dashboard</h2>
+            <div class="col">       
                 <p id="updateTime" class="text-center">Last updated: <span></span></p>
             </div>
         </div>

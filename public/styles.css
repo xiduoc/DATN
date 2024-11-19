@@ -108,15 +108,16 @@ h1 {
 
 /* Date Selection */
 .date-selection {
+    margin: 20px auto;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: fit-content;
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 10px;
 }
 
 .date-selection span {
