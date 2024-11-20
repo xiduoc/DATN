@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Previous head content remains the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.2.1/chartjs-plugin-zoom.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Previous styles remain the same */
         h1 {
             font-weight: 700;
             color: #333;
@@ -85,7 +83,6 @@
     </style>
 </head>
 <body class="bg-light">
-    <!-- Previous body content remains the same until script -->
     <div class="container-fluid py-4">
         <nav class="navigation">
             <a href="/">Home</a>
@@ -179,7 +176,6 @@
         const maxDataPoints = 15;
         let lastTimestamp = null;
 
-        // Previous zoom options remain the same
         const zoomOptions = {
             zoom: {
                 wheel: {
@@ -211,7 +207,6 @@
             }
         };
 
-        // Set default dates (30 days ago to today)
         function setDefaultDates() {
             const today = new Date();
             const thirtyDaysAgo = new Date(today);
@@ -221,9 +216,7 @@
             document.getElementById('toDate').value = today.toISOString().split('T')[0];
         }
 
-        // Previous chart initialization remains the same
         function initCharts() {
-            // Previous chart initialization code remains the same
             charts.tempHumid = new Chart(document.getElementById('tempHumidChart'), {
                 type: 'line',
                 data: {
@@ -382,7 +375,6 @@
             });
         }
 
-        // Handle pan event
         function handlePan(chart) {
             const min = chart.scales.x.min;
             if (min && min < lastTimestamp) {
@@ -390,9 +382,7 @@
             }
         }
 
-        // Update charts with data
         function updateCharts(data) {
-            // Previous update logic remains the same
             data = data.reverse();
 
             dataBuffer.tempHumid = [];
@@ -419,7 +409,6 @@
             charts.npk.update();
         }
 
-        // Modified fetchData function to handle both filtered and unfiltered data
         async function fetchData(useFilters = false) {
             try {
                 let url = '/api/data/chart';
@@ -444,7 +433,6 @@
             }
         }
 
-        // Previous fetchMoreData function remains the same
         async function fetchMoreData(panOffset) {
             try {
                 const response = await fetch(`/api/data/chart?start=${new Date(panOffset).toISOString()}`);
@@ -459,7 +447,6 @@
             }
         }
 
-        // Previous checkbox change handler remains the same
         function handleCheckboxChange() {
             const tempCheckBox = document.getElementById('tempCheckBox');
             const humidCheckBox = document.getElementById('humidCheckBox');
@@ -483,18 +470,10 @@
             charts.npk.update();
         }
 
-        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
             setDefaultDates();
             initCharts();
-            fetchData(false); // Load all data initially
-            
-            // Update data every 30 seconds with current filter state
-            setInterval(() => {
-                const fromDate = document.getElementById('fromDate').value;
-                const toDate = document.getElementById('toDate').value;
-                fetchData(fromDate && toDate);
-            }, 30000);
+            fetchData(false); // Load initial data
 
             // Handle checkbox changes
             document.querySelectorAll('.form-check-input').forEach((input) => {

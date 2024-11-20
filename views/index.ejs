@@ -126,6 +126,7 @@
             <table id="dataTable" class="display">
                 <thead>
                     <tr>
+                        <th>Raw Timestamp</th>
                         <th>Date</th>
                         <th>Time</th>
                         <th>Humidity</th>
@@ -206,6 +207,10 @@
                     columns: [
                         { 
                             data: 'created_at',
+                            visible: false // Hidden column for sorting
+                        },
+                        { 
+                            data: 'created_at',
                             render: function(data) {
                                 return new Date(data).toLocaleDateString();
                             }
@@ -282,7 +287,7 @@
                     ],
                     pageLength: 10,
                     lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, 'All']],
-                    order: [[0, 'desc']], // Sort by date column descending by default
+                    order: [[0, 'desc']], // Sort by raw timestamp column descending
                     language: {
                         lengthMenu: "Show _MENU_ entries per page",
                         info: "Showing _START_ to _END_ of _TOTAL_ entries",

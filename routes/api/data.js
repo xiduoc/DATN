@@ -74,7 +74,7 @@ router.get('/chart', authenticateUser, async (req, res) => {
             LEFT JOIN devices d ON r.device_id = d.id
             WHERE (d.user_id = ? OR r.user_id = ?) AND r.created_at BETWEEN ? AND ?
             ORDER BY r.created_at DESC
-            LIMIT 100
+            LIMIT 15
         `, [req.user.id, req.user.id, start, end]);
         
         res.json(results);
