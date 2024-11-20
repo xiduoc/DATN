@@ -6,6 +6,54 @@ import ExcelJS from 'exceljs';
 
 const router = express.Router();
 
+// Get dashboard data
+router.get('/dashboard', authenticateUser, async (req, res) => {
+    try {
+        const { fromDate = config.DEFAULT_DATE_RANGE.start, toDate = config.DEFAULT_DATE_RANGE.end } = req.query;
+        
+        const results = await query(
+            `SELECT r.*, DATE_FORMAT(r.created_at, "%Y-%m-%d %H:%i:%s") as formatted_timestamp 
+             FROM readnpk r
+             LEFT JOIN devices d ON r.device_id = d.id
+             WHERE (d.user_id = ? OR r.user_id = ?) AND r.created_at BETWEEN ? AND ?`,
+            [req.user.id, req.user.id, fromDate, toDate]
+        );
+        
+        res.json(results);
+    } catch (error) {
+        console.error('Dashboard data error:', error);
+        res.status(500).json({ error: 'Failed to fetch dashboard data' });
+    }
+});
+
+// Get map data
+router.get('/map', authenticateUser, async (req, res) => {
+    try {
+        const { fromDate = config.DEFAULT_DATE_RANGE.start, toDate = config.DEFAULT_DATE_RANGE.end } = req.query;
+
+        const results = await query(`
+            WITH RankedData AS (
+                SELECT 
+                    r.*,
+                    DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i:%s') as formatted_timestamp,
+                    ROW_NUMBER() OVER (PARTITION BY r.latitude, r.longitude ORDER BY r.created_at DESC) as rn
+                FROM readnpk r
+                LEFT JOIN devices d ON r.device_id = d.id
+                WHERE (d.user_id = ? OR r.user_id = ?) 
+                    AND r.latitude IS NOT NULL 
+                    AND r.longitude IS NOT NULL
+                    AND r.created_at BETWEEN ? AND ?
+            )
+            SELECT * FROM RankedData WHERE rn = 1
+        `, [req.user.id, req.user.id, fromDate, toDate]);
+        
+        res.json(results);
+    } catch (error) {
+        console.error('Map data error:', error);
+        res.status(500).json({ error: 'Failed to fetch map data' });
+    }
+});
+
 // Get chart data
 router.get('/chart', authenticateUser, async (req, res) => {
     try {

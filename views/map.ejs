@@ -41,6 +41,18 @@
             margin-left: 10px;
             cursor: pointer;
         }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -67,11 +79,13 @@
     </div>
 
     <div id="map"></div>
+    <div id="loading" class="loading">Loading data...</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // Initialize the map
         const map = L.map('map').setView([10.8231, 106.6297], 13); // Default view of Vietnam
+        let markers = []; // Store markers for later removal
 
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -79,79 +93,15 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Add markers for each point
-        const points = JSON.parse('<%- JSON.stringify(points || []) %>');
-        
-        // Create a bounds object to fit all markers
-        const bounds = L.latLngBounds();
-
-        points.forEach((point, index) => {
-            if (point && point.latitude && point.longitude) {
-                const { latitude, longitude, location = 'Unknown', formatted_timestamp, temperature, humidity, ph, conductivity, nitrogen, phosphorus, potassium, circleColor = '#0000ff' } = point;
-
-                // Create popup content with sensor data
-                const popupContent = `
-                    <div class="sensor-popup">
-                        <h3>Sensor Data</h3>
-                        <table>
-                            <tr><th>Location:</th><td>${location}</td></tr>
-                            <tr><th>Time:</th><td>${formatted_timestamp}</td></tr>
-                            <tr><th>Temperature:</th><td>${temperature}°C</td></tr>
-                            <tr><th>Humidity:</th><td>${humidity}%</td></tr>
-                            <tr><th>pH:</th><td>${ph}</td></tr>
-                            <tr><th>Conductivity:</th><td>${conductivity}</td></tr>
-                            <tr><th>Nitrogen:</th><td>${nitrogen}</td></tr>
-                            <tr><th>Phosphorus:</th><td>${phosphorus}</td></tr>
-                            <tr><th>Potassium:</th><td>${potassium}</td></tr>
-                        </table>
-                        <label for="circleColor-${index}">Circle Color:</label>
-                        <input type="color" id="circleColor-${index}" name="circleColor" value="${circleColor}">
-                    </div>
-                `;
-
-                const marker = L.marker([latitude, longitude]).bindPopup(popupContent).addTo(map);
-                const circleMarker = L.circleMarker([latitude, longitude], {
-                    color: circleColor,
-                    fillColor: circleColor,
-                    fillOpacity: 0.5,
-                    radius: 10
-                }).addTo(map);
-
-                bounds.extend([latitude, longitude]);
-
-                marker.on('popupopen', function() {
-                    const colorInput = document.getElementById(`circleColor-${index}`);
-                    colorInput.addEventListener('input', function() {
-                        const newColor = colorInput.value;
-                        circleMarker.setStyle({ color: newColor, fillColor: newColor });
-                    });
-                });
-            }
-        });
-
-        // Fit the map to the bounds of all markers if there are any points
-        if (points.length > 0) {
-            map.fitBounds(bounds);
+        function clearMarkers() {
+            markers.forEach(marker => {
+                map.removeLayer(marker.marker);
+                map.removeLayer(marker.circle);
+            });
+            markers = [];
         }
 
-        // Set default dates (30 days ago to today)
-        function setDefaultDates() {
-            const today = new Date();
-            const thirtyDaysAgo = new Date(today);
-            thirtyDaysAgo.setDate(today.getDate() - 30);
-
-            if (!document.getElementById('fromDate').value) {
-                document.getElementById('fromDate').value = thirtyDaysAgo.toISOString().split('T')[0];
-            }
-            if (!document.getElementById('toDate').value) {
-                document.getElementById('toDate').value = today.toISOString().split('T')[0];
-            }
-        }
-
-        setDefaultDates();
-
-        // Handle show data button click
-        document.getElementById('showData').addEventListener('click', function() {
+        function loadMapData() {
             const fromDate = document.getElementById('fromDate').value;
             const toDate = document.getElementById('toDate').value;
             
@@ -160,8 +110,99 @@
                 return;
             }
 
-            window.location.href = `/map?fromDate=${fromDate}&toDate=${toDate}`;
-        });
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+
+            // Clear existing markers
+            clearMarkers();
+
+            // Fetch data from API
+            fetch(`/api/data/map?fromDate=${fromDate}&toDate=${toDate}`)
+                .then(response => response.json())
+                .then(points => {
+                    const bounds = L.latLngBounds();
+
+                    points.forEach((point, index) => {
+                        if (point && point.latitude && point.longitude) {
+                            const { latitude, longitude, location = 'Unknown', formatted_timestamp, temperature, humidity, ph, conductivity, nitrogen, phosphorus, potassium, circleColor = '#0000ff' } = point;
+
+                            // Create popup content with sensor data
+                            const popupContent = `
+                                <div class="sensor-popup">
+                                    <h3>Sensor Data</h3>
+                                    <table>
+                                        <tr><th>Location:</th><td>${location}</td></tr>
+                                        <tr><th>Time:</th><td>${formatted_timestamp}</td></tr>
+                                        <tr><th>Temperature:</th><td>${temperature}°C</td></tr>
+                                        <tr><th>Humidity:</th><td>${humidity}%</td></tr>
+                                        <tr><th>pH:</th><td>${ph}</td></tr>
+                                        <tr><th>Conductivity:</th><td>${conductivity}</td></tr>
+                                        <tr><th>Nitrogen:</th><td>${nitrogen}</td></tr>
+                                        <tr><th>Phosphorus:</th><td>${phosphorus}</td></tr>
+                                        <tr><th>Potassium:</th><td>${potassium}</td></tr>
+                                    </table>
+                                    <label for="circleColor-${index}">Circle Color:</label>
+                                    <input type="color" id="circleColor-${index}" name="circleColor" value="${circleColor}">
+                                </div>
+                            `;
+
+                            const marker = L.marker([latitude, longitude]).bindPopup(popupContent).addTo(map);
+                            const circleMarker = L.circleMarker([latitude, longitude], {
+                                color: circleColor,
+                                fillColor: circleColor,
+                                fillOpacity: 0.5,
+                                radius: 10
+                            }).addTo(map);
+
+                            bounds.extend([latitude, longitude]);
+
+                            markers.push({
+                                marker: marker,
+                                circle: circleMarker
+                            });
+
+                            marker.on('popupopen', function() {
+                                const colorInput = document.getElementById(`circleColor-${index}`);
+                                colorInput.addEventListener('input', function() {
+                                    const newColor = colorInput.value;
+                                    circleMarker.setStyle({ color: newColor, fillColor: newColor });
+                                });
+                            });
+                        }
+                    });
+
+                    // Fit the map to the bounds of all markers if there are any points
+                    if (points.length > 0) {
+                        map.fitBounds(bounds);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading map data:', error);
+                    alert('Error loading map data');
+                })
+                .finally(() => {
+                    // Hide loading indicator
+                    document.getElementById('loading').style.display = 'none';
+                });
+        }
+
+        // Set default dates (30 days ago to today)
+        function setDefaultDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            document.getElementById('fromDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('toDate').value = today.toISOString().split('T')[0];
+            
+            // Load initial data
+            loadMapData();
+        }
+
+        setDefaultDates();
+
+        // Handle show data button click
+        document.getElementById('showData').addEventListener('click', loadMapData);
     </script>
 </body>
 </html>

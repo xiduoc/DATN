@@ -83,6 +83,11 @@
             font-weight: bold;
             cursor: pointer;
         }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+        }
     </style>
     
     <!-- Scripts -->
@@ -134,46 +139,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% data.forEach(row => { %>
-                        <tr data-id="<%= row.id %>">
-                            <td data-order="<%= new Date(row.created_at).getTime() %>">
-                                <%= new Date(row.created_at).toLocaleDateString() %>
-                            </td>
-                            <td><%= new Date(row.created_at).toLocaleTimeString() %></td>
-                            <td class="<%= (row.humidity < 40 || row.humidity > 80) ? 'warning-value' : '' %>">
-                                <%= row.humidity %>
-                            </td>
-                            <td class="<%= (row.temperature < 20 || row.temperature > 30) ? 'warning-value' : '' %>">
-                                <%= row.temperature %>
-                            </td>
-                            <td class="<%= (row.conductivity < 0 || row.conductivity > 2000) ? 'warning-value' : '' %>">
-                                <%= row.conductivity %>
-                            </td>
-                            <td class="<%= (row.ph < 6.0 || row.ph > 7.5) ? 'warning-value' : '' %>">
-                                <%= row.ph %>
-                            </td>
-                            <td class="<%= (row.nitrogen < 150 || row.nitrogen > 300) ? 'warning-value' : '' %>">
-                                <%= row.nitrogen %>
-                            </td>
-                            <td class="<%= (row.phosphorus < 25 || row.phosphorus > 50) ? 'warning-value' : '' %>">
-                                <%= row.phosphorus %>
-                            </td>
-                            <td class="<%= (row.potassium < 150 || row.potassium > 300) ? 'warning-value' : '' %>">
-                                <%= row.potassium %>
-                            </td>
-                            <td title="<%= row.location || 'N/A' %>"><%= row.location || 'N/A' %></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="edit-btn" onclick="openEditModal(this)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="delete-btn" onclick="deleteRow(this)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    <% }) %>
                 </tbody>
             </table>
         </div>
@@ -226,31 +191,113 @@
 
     <script>
         $(document).ready(function() {
-            // Initialize DataTable
-            var table = $('#dataTable').DataTable({
-                pageLength: 10,
-                lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, 'All']],
-                order: [[0, 'desc']], // Sort by date column descending by default
-                columnDefs: [{
-                    targets: 0,
-                    type: 'num'  // Use numeric sorting for timestamps
-                }],
-                language: {
-                    lengthMenu: "Show _MENU_ entries per page",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    paginate: {
-                        first: "First",
-                        last: "Last",
-                        next: "Next",
-                        previous: "Previous"
-                    },
-                    search: "Search:",
-                    zeroRecords: "No matching records found"
-                }
-            });
+            let dataTable;
 
-            // Handle show data button click
-            $('#showData').click(function() {
+            // Initialize DataTable
+            function initializeDataTable(data) {
+                if (dataTable) {
+                    dataTable.destroy();
+                }
+
+                dataTable = $('#dataTable').DataTable({
+                    data: data,
+                    columns: [
+                        { 
+                            data: 'created_at',
+                            render: function(data) {
+                                return new Date(data).toLocaleDateString();
+                            }
+                        },
+                        { 
+                            data: 'created_at',
+                            render: function(data) {
+                                return new Date(data).toLocaleTimeString();
+                            }
+                        },
+                        { 
+                            data: 'humidity',
+                            render: function(data) {
+                                return `<span class="${(data < 40 || data > 80) ? 'warning-value' : ''}">${data}</span>`;
+                            }
+                        },
+                        { 
+                            data: 'temperature',
+                            render: function(data) {
+                                return `<span class="${(data < 20 || data > 30) ? 'warning-value' : ''}">${data}</span>`;
+                            }
+                        },
+                        { 
+                            data: 'conductivity',
+                            render: function(data) {
+                                return `<span class="${(data < 0 || data > 2000) ? 'warning-value' : ''}">${data}</span>`;
+                            }
+                        },
+                        { 
+                            data: 'ph',
+                            render: function(data) {
+                                return `<span class="${(data < 6.0 || data > 7.5) ? 'warning-value' : ''}">${data}</span>`;
+                            }
+                        },
+                        { 
+                            data: 'nitrogen',
+                            render: function(data) {
+                                return `<span class="${(data < 150 || data > 300) ? 'warning-value' : ''}">${data}</span>`;
+                            }
+                        },
+                        { 
+                            data: 'phosphorus',
+                            render: function(data) {
+                                return `<span class="${(data < 25 || data > 50) ? 'warning-value' : ''}">${data}</span>`;
+                            }
+                        },
+                        { 
+                            data: 'potassium',
+                            render: function(data) {
+                                return `<span class="${(data < 150 || data > 300) ? 'warning-value' : ''}">${data}</span>`;
+                            }
+                        },
+                        { 
+                            data: 'location',
+                            render: function(data) {
+                                return data || 'N/A';
+                            }
+                        },
+                        {
+                            data: 'id',
+                            render: function(data) {
+                                return `
+                                    <div class="action-buttons">
+                                        <button class="edit-btn" onclick="openEditModal(this)" data-id="${data}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="delete-btn" onclick="deleteRow(this)" data-id="${data}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                        }
+                    ],
+                    pageLength: 10,
+                    lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, 'All']],
+                    order: [[0, 'desc']], // Sort by date column descending by default
+                    language: {
+                        lengthMenu: "Show _MENU_ entries per page",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        paginate: {
+                            first: "First",
+                            last: "Last",
+                            next: "Next",
+                            previous: "Previous"
+                        },
+                        search: "Search:",
+                        zeroRecords: "No matching records found"
+                    }
+                });
+            }
+
+            // Load data function
+            function loadData() {
                 const fromDate = $('#fromDate').val();
                 const toDate = $('#toDate').val();
                 
@@ -259,8 +306,20 @@
                     return;
                 }
 
-                window.location.href = `/?fromDate=${fromDate}&toDate=${toDate}`;
-            });
+                $.ajax({
+                    url: `/api/data/dashboard?fromDate=${fromDate}&toDate=${toDate}`,
+                    method: 'GET',
+                    success: function(data) {
+                        initializeDataTable(data);
+                    },
+                    error: function(xhr) {
+                        alert('Error loading data');
+                    }
+                });
+            }
+
+            // Handle show data button click
+            $('#showData').click(loadData);
 
             // Handle export button click
             $('#exportBtn').click(function() {
@@ -272,7 +331,7 @@
                     return;
                 }
 
-                window.location.href = `/export?fromDate=${fromDate}&toDate=${toDate}`;
+                window.location.href = `/api/data/export?fromDate=${fromDate}&toDate=${toDate}`;
             });
 
             // Set default dates
@@ -281,12 +340,11 @@
                 const thirtyDaysAgo = new Date(today);
                 thirtyDaysAgo.setDate(today.getDate() - 30);
 
-                if (!$('#fromDate').val()) {
-                    $('#fromDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
-                }
-                if (!$('#toDate').val()) {
-                    $('#toDate').val(today.toISOString().split('T')[0]);
-                }
+                $('#fromDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
+                $('#toDate').val(today.toISOString().split('T')[0]);
+                
+                // Load initial data
+                loadData();
             }
 
             setDefaultDates();
@@ -313,7 +371,7 @@
                     success: function(response) {
                         alert('Data updated successfully');
                         closeEditModal();
-                        location.reload();
+                        loadData();
                     },
                     error: function(xhr) {
                         alert('Error updating data');
@@ -342,7 +400,7 @@
                     success: function(response) {
                         alert('Data added successfully');
                         closeAddModal();
-                        location.reload();
+                        loadData();
                     },
                     error: function(xhr) {
                         alert('Error adding data');
@@ -353,19 +411,18 @@
 
         // Modal functions
         function openEditModal(button) {
-            const row = $(button).closest('tr');
-            const id = row.data('id');
-            const cells = row.find('td');
+            const id = $(button).data('id');
+            const row = dataTable.row($(button).closest('tr')).data();
 
             $('#editId').val(id);
-            $('#editHumidity').val($(cells[2]).text().trim());
-            $('#editTemperature').val($(cells[3]).text().trim());
-            $('#editConductivity').val($(cells[4]).text().trim());
-            $('#editPh').val($(cells[5]).text().trim());
-            $('#editNitrogen').val($(cells[6]).text().trim());
-            $('#editPhosphorus').val($(cells[7]).text().trim());
-            $('#editPotassium').val($(cells[8]).text().trim());
-            $('#editLocation').val($(cells[9]).text().trim());
+            $('#editHumidity').val(row.humidity);
+            $('#editTemperature').val(row.temperature);
+            $('#editConductivity').val(row.conductivity);
+            $('#editPh').val(row.ph);
+            $('#editNitrogen').val(row.nitrogen);
+            $('#editPhosphorus').val(row.phosphorus);
+            $('#editPotassium').val(row.potassium);
+            $('#editLocation').val(row.location);
 
             $('#editModal').css('display', 'block');
         }
@@ -387,15 +444,14 @@
                 return;
             }
 
-            const row = $(button).closest('tr');
-            const id = row.data('id');
+            const id = $(button).data('id');
 
             $.ajax({
                 url: `/api/data/${id}`,
                 method: 'DELETE',
                 success: function(response) {
                     alert('Data deleted successfully');
-                    row.remove();
+                    loadData();
                 },
                 error: function(xhr) {
                     alert('Error deleting data');
