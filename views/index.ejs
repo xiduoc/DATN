@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+<!-- Previous head content remains the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/styles.css">
     <style>
+        /* Previous styles remain the same */
         .warning-value {
             color: #aa0f1f !important;
             font-weight: bold;
@@ -41,7 +43,6 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -144,6 +145,7 @@
         </div>
     </div>
 
+    <!-- Previous modal content remains the same -->
     <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -297,17 +299,22 @@
             }
 
             // Load data function
-            function loadData() {
-                const fromDate = $('#fromDate').val();
-                const toDate = $('#toDate').val();
+            function loadData(useFilters = false) {
+                let url = '/api/data/dashboard';
                 
-                if (!fromDate || !toDate) {
-                    alert('Please select both dates');
-                    return;
+                if (useFilters) {
+                    const fromDate = $('#fromDate').val();
+                    const toDate = $('#toDate').val();
+                    
+                    if (!fromDate || !toDate) {
+                        alert('Please select both dates');
+                        return;
+                    }
+                    url += `?fromDate=${fromDate}&toDate=${toDate}`;
                 }
 
                 $.ajax({
-                    url: `/api/data/dashboard?fromDate=${fromDate}&toDate=${toDate}`,
+                    url: url,
                     method: 'GET',
                     success: function(data) {
                         initializeDataTable(data);
@@ -319,7 +326,9 @@
             }
 
             // Handle show data button click
-            $('#showData').click(loadData);
+            $('#showData').click(function() {
+                loadData(true); // Load with date filters
+            });
 
             // Handle export button click
             $('#exportBtn').click(function() {
@@ -343,13 +352,13 @@
                 $('#fromDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
                 $('#toDate').val(today.toISOString().split('T')[0]);
                 
-                // Load initial data
-                loadData();
+                // Load initial data without filters
+                loadData(false);
             }
 
             setDefaultDates();
 
-            // Handle edit form submission
+            // Previous event handlers remain the same
             $('#editForm').on('submit', function(e) {
                 e.preventDefault();
                 const id = $('#editId').val();
@@ -371,7 +380,7 @@
                     success: function(response) {
                         alert('Data updated successfully');
                         closeEditModal();
-                        loadData();
+                        loadData(false);
                     },
                     error: function(xhr) {
                         alert('Error updating data');
@@ -379,7 +388,6 @@
                 });
             });
 
-            // Handle add form submission
             $('#addForm').on('submit', function(e) {
                 e.preventDefault();
                 const data = {
@@ -400,7 +408,7 @@
                     success: function(response) {
                         alert('Data added successfully');
                         closeAddModal();
-                        loadData();
+                        loadData(false);
                     },
                     error: function(xhr) {
                         alert('Error adding data');
@@ -409,7 +417,7 @@
             });
         });
 
-        // Modal functions
+        // Modal functions remain the same
         function openEditModal(button) {
             const id = $(button).data('id');
             const row = dataTable.row($(button).closest('tr')).data();
@@ -451,7 +459,7 @@
                 method: 'DELETE',
                 success: function(response) {
                     alert('Data deleted successfully');
-                    loadData();
+                    loadData(false);
                 },
                 error: function(xhr) {
                     alert('Error deleting data');

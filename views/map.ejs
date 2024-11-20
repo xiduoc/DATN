@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="/styles.css">
     <style>
+        /* Previous styles remain the same */
         #map {
             height: 82vh;
             width: 100%;
@@ -101,23 +102,29 @@
             markers = [];
         }
 
-        function loadMapData() {
-            const fromDate = document.getElementById('fromDate').value;
-            const toDate = document.getElementById('toDate').value;
-            
-            if (!fromDate || !toDate) {
-                alert('Please select both dates');
-                return;
-            }
-
+        function loadMapData(useFilters = false) {
             // Show loading indicator
             document.getElementById('loading').style.display = 'block';
 
             // Clear existing markers
             clearMarkers();
 
+            // Build URL based on whether we're using filters
+            let url = '/api/data/map';
+            if (useFilters) {
+                const fromDate = document.getElementById('fromDate').value;
+                const toDate = document.getElementById('toDate').value;
+                
+                if (!fromDate || !toDate) {
+                    alert('Please select both dates');
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+                url += `?fromDate=${fromDate}&toDate=${toDate}`;
+            }
+
             // Fetch data from API
-            fetch(`/api/data/map?fromDate=${fromDate}&toDate=${toDate}`)
+            fetch(url)
                 .then(response => response.json())
                 .then(points => {
                     const bounds = L.latLngBounds();
@@ -195,14 +202,14 @@
             document.getElementById('fromDate').value = thirtyDaysAgo.toISOString().split('T')[0];
             document.getElementById('toDate').value = today.toISOString().split('T')[0];
             
-            // Load initial data
-            loadMapData();
+            // Load initial data without filters
+            loadMapData(false);
         }
 
         setDefaultDates();
 
-        // Handle show data button click
-        document.getElementById('showData').addEventListener('click', loadMapData);
+        // Handle show data button click - now uses filters
+        document.getElementById('showData').addEventListener('click', () => loadMapData(true));
     </script>
 </body>
 </html>
