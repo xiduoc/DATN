@@ -26,6 +26,21 @@
         .sensor-popup th {
             background-color: #f5f5f5;
         }
+        .date-selection {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .date-selection input[type="date"] {
+            padding: 5px;
+            margin: 0 10px;
+        }
+        .date-selection button {
+            padding: 5px 15px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -42,6 +57,14 @@
     </div>
 
     <h1>Locations Map</h1>
+
+    <div class="date-selection">
+        <span>Select From Date: </span>
+        <input type="date" id="fromDate" name="fromDate">
+        <span>Select To Date: </span>
+        <input type="date" id="toDate" name="toDate">
+        <button type="button" id="showData">Show Data</button>
+    </div>
 
     <div id="map"></div>
 
@@ -110,6 +133,35 @@
         if (points.length > 0) {
             map.fitBounds(bounds);
         }
+
+        // Set default dates (30 days ago to today)
+        function setDefaultDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            if (!document.getElementById('fromDate').value) {
+                document.getElementById('fromDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            }
+            if (!document.getElementById('toDate').value) {
+                document.getElementById('toDate').value = today.toISOString().split('T')[0];
+            }
+        }
+
+        setDefaultDates();
+
+        // Handle show data button click
+        document.getElementById('showData').addEventListener('click', function() {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            
+            if (!fromDate || !toDate) {
+                alert('Please select both dates');
+                return;
+            }
+
+            window.location.href = `/map?fromDate=${fromDate}&toDate=${toDate}`;
+        });
     </script>
 </body>
 </html>
