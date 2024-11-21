@@ -84,7 +84,6 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>Username</th>
                                         <th>Email</th>
                                         <th>Status</th>
@@ -95,7 +94,6 @@
                                 <tbody id="userTableBody">
                                     <% users.forEach(user => { %>
                                     <tr>
-                                        <td><%= user.id %></td>
                                         <td class="username"><%= user.username %></td>
                                         <td><%= user.email %></td>
                                         <td>
@@ -130,7 +128,6 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>Name</th>
                                         <th>Owner</th>
                                         <th>Email</th>
@@ -142,7 +139,6 @@
                                 <tbody>
                                     <% devices.forEach(device => { %>
                                     <tr>
-                                        <td><%= device.id %></td>
                                         <td><%= device.name %></td>
                                         <td><%= device.username %></td>
                                         <td><%= device.email %></td>
