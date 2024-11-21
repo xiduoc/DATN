@@ -69,7 +69,7 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
         
         // Fetch devices with owner information
         const devices = await query(`
-            SELECT d.*, u.username 
+            SELECT d.*, u.username, u.email
             FROM devices d 
             JOIN users u ON d.user_id = u.id 
             ORDER BY d.created_at DESC

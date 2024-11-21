@@ -133,6 +133,7 @@
                                         <th>ID</th>
                                         <th>Name</th>
                                         <th>Owner</th>
+                                        <th>Email</th>
                                         <th>Status</th>
                                         <th>Created At</th>
                                         <th>Actions</th>
@@ -144,6 +145,7 @@
                                         <td><%= device.id %></td>
                                         <td><%= device.name %></td>
                                         <td><%= device.username %></td>
+                                        <td><%= device.email %></td>
                                         <td>
                                             <span class="badge <%= device.status === 'active' ? 'bg-success' : 'bg-danger' %> status-badge">
                                                 <%= device.status %>
