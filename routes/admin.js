@@ -84,7 +84,7 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
 
 // Add New User
 router.post('/users/add', authenticateAdmin, async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, returnTab } = req.body;
 
     try {
         // Check if username or email already exists
@@ -106,7 +106,7 @@ router.post('/users/add', authenticateAdmin, async (req, res) => {
             [username, email, hashedPassword, 'active']
         );
 
-        res.redirect('/admin/dashboard');
+        res.redirect(`/admin/dashboard?returnTab=${returnTab || 'users'}`);
     } catch (error) {
         console.error('Error adding user:', error);
         res.status(500).send('Error adding user');
@@ -116,6 +116,7 @@ router.post('/users/add', authenticateAdmin, async (req, res) => {
 // Delete User
 router.post('/users/:id/delete', authenticateAdmin, async (req, res) => {
     const userId = req.params.id;
+    const { returnTab } = req.body;
 
     try {
         // First get all devices for this user
@@ -138,7 +139,7 @@ router.post('/users/:id/delete', authenticateAdmin, async (req, res) => {
         // Finally delete the user
         await query('DELETE FROM users WHERE id = ?', [userId]);
         
-        res.redirect('/admin/dashboard');
+        res.redirect(`/admin/dashboard?returnTab=${returnTab || 'users'}`);
     } catch (error) {
         console.error('Error deleting user:', error);
         res.status(500).send('Error deleting user');
@@ -148,6 +149,7 @@ router.post('/users/:id/delete', authenticateAdmin, async (req, res) => {
 // Delete Device
 router.post('/devices/:id/delete', authenticateAdmin, async (req, res) => {
     const deviceId = req.params.id;
+    const { returnTab } = req.body;
 
     try {
         // First get the device's user_id
@@ -166,7 +168,7 @@ router.post('/devices/:id/delete', authenticateAdmin, async (req, res) => {
         // Then delete the device
         await query('DELETE FROM devices WHERE id = ?', [deviceId]);
         
-        res.redirect('/admin/dashboard');
+        res.redirect(`/admin/dashboard?returnTab=${returnTab || 'devices'}`);
     } catch (error) {
         console.error('Error deleting device:', error);
         res.status(500).send('Error deleting device');
@@ -176,6 +178,8 @@ router.post('/devices/:id/delete', authenticateAdmin, async (req, res) => {
 // Toggle User Status
 router.post('/users/:id/toggle', authenticateAdmin, async (req, res) => {
     const userId = req.params.id;
+    const { returnTab } = req.body;
+
     try {
         const [user] = await query('SELECT status FROM users WHERE id = ?', [userId]);
         if (!user) {
@@ -185,7 +189,7 @@ router.post('/users/:id/toggle', authenticateAdmin, async (req, res) => {
         const newStatus = user.status === 'active' ? 'inactive' : 'active';
         await query('UPDATE users SET status = ? WHERE id = ?', [newStatus, userId]);
         
-        res.redirect('/admin/dashboard');
+        res.redirect(`/admin/dashboard?returnTab=${returnTab || 'users'}`);
     } catch (error) {
         console.error('Error toggling user status:', error);
         res.status(500).send('Error updating user status');
@@ -195,6 +199,8 @@ router.post('/users/:id/toggle', authenticateAdmin, async (req, res) => {
 // Toggle Device Status
 router.post('/devices/:id/toggle', authenticateAdmin, async (req, res) => {
     const deviceId = req.params.id;
+    const { returnTab } = req.body;
+
     try {
         const [device] = await query('SELECT status FROM devices WHERE id = ?', [deviceId]);
         if (!device) {
@@ -204,7 +210,7 @@ router.post('/devices/:id/toggle', authenticateAdmin, async (req, res) => {
         const newStatus = device.status === 'active' ? 'inactive' : 'active';
         await query('UPDATE devices SET status = ? WHERE id = ?', [newStatus, deviceId]);
         
-        res.redirect('/admin/dashboard');
+        res.redirect(`/admin/dashboard?returnTab=${returnTab || 'devices'}`);
     } catch (error) {
         console.error('Error toggling device status:', error);
         res.status(500).send('Error updating device status');
@@ -213,7 +219,7 @@ router.post('/devices/:id/toggle', authenticateAdmin, async (req, res) => {
 
 // Update Admin Credentials
 router.post('/settings/update-credentials', authenticateAdmin, async (req, res) => {
-    const { currentPassword, newUsername, newPassword, confirmPassword } = req.body;
+    const { currentPassword, newUsername, newPassword, confirmPassword, returnTab } = req.body;
 
     try {
         // Verify current admin

@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="/styles.css">
     <style>
-        /* Previous styles remain the same */
         #map {
             height: 82vh;
             width: 100%;
@@ -60,6 +59,32 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
             display: none;
         }
+        .no-data-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px 40px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            text-align: center;
+            display: none;
+        }
+        .close-button {
+            position: absolute;
+            right: 10px;
+            top: 5px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .close-button:hover {
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -87,6 +112,11 @@
 
     <div id="map"></div>
     <div id="loading" class="loading">Loading data...</div>
+    <div id="noDataMessage" class="no-data-message">
+        <span class="close-button" onclick="closeNoDataMessage()">&times;</span>
+        <h3>No Data Available</h3>
+        <p>There is no sensor data available for the selected time period.</p>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -108,9 +138,14 @@
             markers = [];
         }
 
+        function closeNoDataMessage() {
+            document.getElementById('noDataMessage').style.display = 'none';
+        }
+
         function loadMapData(useFilters = false) {
             // Show loading indicator
             document.getElementById('loading').style.display = 'block';
+            document.getElementById('noDataMessage').style.display = 'none';
 
             // Clear existing markers
             clearMarkers();
@@ -133,6 +168,11 @@
             fetch(url)
                 .then(response => response.json())
                 .then(points => {
+                    if (!points || points.length === 0) {
+                        document.getElementById('noDataMessage').style.display = 'block';
+                        return;
+                    }
+
                     const bounds = L.latLngBounds();
 
                     points.forEach((point, index) => {
@@ -191,7 +231,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading map data:', error);
-                    alert('Error loading map data');
+                    document.getElementById('noDataMessage').style.display = 'block';
                 })
                 .finally(() => {
                     // Hide loading indicator
