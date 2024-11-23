@@ -1,16 +1,13 @@
 import jwt from 'jsonwebtoken';
 import mysql from 'mysql';
 import bcrypt from 'bcryptjs';
+import config from '../config/config.js';
 
-const ADMIN_JWT_SECRET = 'admin-secret-key'; // Change this in production
+// Use ADMIN_JWT_SECRET from config
+const { ADMIN_JWT_SECRET } = config;
 
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'data',
-    connectionLimit: 10
-});
+// Use database configuration from config
+const pool = mysql.createPool(config.DB);
 
 // Admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
