@@ -1,9 +1,9 @@
 import express from 'express';
-import mysql from 'mysql';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { authenticateDevice } from './middleware/auth.js';
 import { initializeDatabase } from './database/init.js';
+import { pool, query } from './config/database.js';
 
 const app = express();
 const port = 3000;
@@ -16,25 +16,6 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 // Support JSON-encoded bodies
 app.use(bodyParser.json());
-
-// MySQL connection pool
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'data',
-    connectionLimit: 10
-});
-
-// Promisify database queries
-const query = (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-        pool.query(sql, params, (error, results) => {
-            if (error) reject(error);
-            resolve(results);
-        });
-    });
-};
 
 // API endpoint to receive data from ESP32
 app.post('/insert', authenticateDevice, async (req, res) => {

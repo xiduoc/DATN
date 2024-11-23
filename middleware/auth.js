@@ -1,13 +1,11 @@
 import jwt from 'jsonwebtoken';
-import mysql from 'mysql';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import config from '../config/config.js';
+import { pool } from '../config/database.js';
 
 // Use JWT_SECRET from config
 const { JWT_SECRET } = config;
-
-const pool = mysql.createPool(config.DB);
 
 // Web authentication middleware
 const authenticateUser = async (req, res, next) => {
