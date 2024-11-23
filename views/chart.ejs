@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Previous head content remains the same until the charts initialization -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -176,6 +177,12 @@
         const maxDataPoints = 15;
         let lastTimestamp = null;
 
+        // Common animation configuration
+        const commonAnimation = {
+            duration: 400,
+            easing: 'easeInOutQuad'
+        };
+
         const zoomOptions = {
             zoom: {
                 wheel: {
@@ -203,6 +210,38 @@
                 onPanComplete: function(chart) {
                     chart.canvas.style.cursor = 'grab';
                     handlePan(chart);
+                }
+            }
+        };
+
+        // Common chart options
+        const commonOptions = {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            animation: commonAnimation,
+            transitions: {
+                show: {
+                    animations: {
+                        x: {
+                            from: 0
+                        },
+                        y: {
+                            from: 0
+                        }
+                    }
+                },
+                hide: {
+                    animations: {
+                        x: {
+                            to: 0
+                        },
+                        y: {
+                            to: 0
+                        }
+                    }
                 }
             }
         };
@@ -241,11 +280,7 @@
                     ]
                 },
                 options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    ...commonOptions,
                     scales: {
                         'y-temp': {
                             type: 'linear',
@@ -294,11 +329,7 @@
                     ]
                 },
                 options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    ...commonOptions,
                     scales: {
                         'y-ph': {
                             type: 'linear',
@@ -354,11 +385,7 @@
                     ]
                 },
                 options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    ...commonOptions,
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -393,20 +420,20 @@
             charts.tempHumid.data.labels = dataBuffer.tempHumid.map(item => new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString());
             charts.tempHumid.data.datasets[0].data = dataBuffer.tempHumid.map(item => item.temperature);
             charts.tempHumid.data.datasets[1].data = dataBuffer.tempHumid.map(item => item.humidity);
-            charts.tempHumid.update();
+            charts.tempHumid.update('active');
 
             dataBuffer.phCond = data.slice(-maxDataPoints);
             charts.phCond.data.labels = dataBuffer.phCond.map(item => new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString());
             charts.phCond.data.datasets[0].data = dataBuffer.phCond.map(item => item.ph);
             charts.phCond.data.datasets[1].data = dataBuffer.phCond.map(item => item.conductivity);
-            charts.phCond.update();
+            charts.phCond.update('active');
 
             dataBuffer.npk = data.slice(-maxDataPoints);
             charts.npk.data.labels = dataBuffer.npk.map(item => new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString());
             charts.npk.data.datasets[0].data = dataBuffer.npk.map(item => item.nitrogen);
             charts.npk.data.datasets[1].data = dataBuffer.npk.map(item => item.phosphorus);
             charts.npk.data.datasets[2].data = dataBuffer.npk.map(item => item.potassium);
-            charts.npk.update();
+            charts.npk.update('active');
         }
 
         async function fetchData(useFilters = false) {
@@ -458,16 +485,16 @@
 
             charts.tempHumid.data.datasets[0].hidden = !tempCheckBox.checked;
             charts.tempHumid.data.datasets[1].hidden = !humidCheckBox.checked;
-            charts.tempHumid.update();
+            charts.tempHumid.update('active');
 
             charts.phCond.data.datasets[0].hidden = !phCheckBox.checked;
             charts.phCond.data.datasets[1].hidden = !condCheckBox.checked;
-            charts.phCond.update();
+            charts.phCond.update('active');
 
             charts.npk.data.datasets[0].hidden = !nCheckBox.checked;
             charts.npk.data.datasets[1].hidden = !pCheckBox.checked;
             charts.npk.data.datasets[2].hidden = !kCheckBox.checked;
-            charts.npk.update();
+            charts.npk.update('active');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
