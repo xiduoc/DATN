@@ -245,43 +245,43 @@
                         { 
                             data: 'humidity',
                             render: function(data) {
-                                return `<span class="${(data < 40 || data > 80) ? 'warning-value' : ''}">${data}</span>`;
+                                return `<span class="${(data < 40 || data > 90) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'temperature',
                             render: function(data) {
-                                return `<span class="${(data < 20 || data > 30) ? 'warning-value' : ''}">${data}</span>`;
+                                return `<span class="${(data < 15 || data > 35) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'conductivity',
                             render: function(data) {
-                                return `<span class="${(data < 0 || data > 2000) ? 'warning-value' : ''}">${data}</span>`;
+                                return `<span class="${(data < 0.5 || data > 3) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'ph',
                             render: function(data) {
-                                return `<span class="${(data < 6.0 || data > 7.5) ? 'warning-value' : ''}">${data}</span>`;
+                                return `<span class="${(data < 5.0 || data > 8) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'nitrogen',
                             render: function(data) {
-                                return `<span class="${(data < 150 || data > 300) ? 'warning-value' : ''}">${data}</span>`;
+                                return `<span class="${(data < 100 || data > 400) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'phosphorus',
                             render: function(data) {
-                                return `<span class="${(data < 25 || data > 50) ? 'warning-value' : ''}">${data}</span>`;
+                                return `<span class="${(data < 20 || data > 80) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'potassium',
                             render: function(data) {
-                                return `<span class="${(data < 150 || data > 300) ? 'warning-value' : ''}">${data}</span>`;
+                                return `<span class="${(data < 100 || data > 400) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
