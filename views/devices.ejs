@@ -71,12 +71,12 @@
             <h3>How to Use Your API Key</h3>
             <p>Method 1 - URL Parameter (for AT commands):</p>
             <pre>
-        http://your-server/insert?apikey=your-api-key-here
+        http://your-server/insert?api_key=your-api-key-here
             </pre>
             
             <p>Example AT Command:</p>
             <pre>
-        AT+HTTPPARA="URL","http://your-server/insert?apikey=your-api-key-here"
+        AT+HTTPPARA="URL","http://your-server/insert?api_key=your-api-key-here"
         AT+HTTPPARA="CONTENT","application/json"
         AT+HTTPDATA=length,10000
         {"Temperature":25.5,"Humidity":60}
