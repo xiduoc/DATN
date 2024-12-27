@@ -14,6 +14,19 @@
             color: #aa0f1f !important;
             font-weight: bold;
         }
+        .warning-toggle {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .warning-toggle.disabled {
+            background-color: #808080;
+        }
         .action-buttons {
             display: flex;
             gap: 5px;
@@ -111,9 +124,14 @@
             <button type="button" id="exportBtn">Export</button>
         </div>
 
-        <button class="add-btn" onclick="openAddModal()">
-            <i class="fas fa-plus"></i> Add New Data
-        </button>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <button class="add-btn" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Add New Data
+            </button>
+            <button class="warning-toggle disabled" id="warningToggle">
+                <i class="fas fa-exclamation-triangle"></i> Warnings
+            </button>
+        </div>
 
         <div class="table-responsive">
             <table id="dataTable" class="display">
@@ -190,6 +208,15 @@
         let dataTable;
 
         $(document).ready(function() {
+            let warningsEnabled = false;
+
+            // Warning toggle functionality
+            $('#warningToggle').click(function() {
+                warningsEnabled = !warningsEnabled;
+                $(this).toggleClass('disabled');
+                loadData(false); // Reload table with new warning state
+            });
+
             // Load data function
             window.loadData = function(useFilters = false) {
                 let url = '/api/data/dashboard';
@@ -245,43 +272,50 @@
                         { 
                             data: 'humidity',
                             render: function(data) {
-                                return `<span class="${(data < 40 || data > 90) ? 'warning-value' : ''}">${data}</span>`;
+                                const isWarning = data < 40 || data > 90;
+                                return `<span class="${(isWarning && warningsEnabled) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'temperature',
                             render: function(data) {
-                                return `<span class="${(data < 15 || data > 35) ? 'warning-value' : ''}">${data}</span>`;
+                                const isWarning = data < 15 || data > 35;
+                                return `<span class="${(isWarning && warningsEnabled) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'conductivity',
                             render: function(data) {
-                                return `<span class="${(data < 0.5 || data > 3) ? 'warning-value' : ''}">${data}</span>`;
+                                const isWarning = data < 0.5 || data > 3;
+                                return `<span class="${(isWarning && warningsEnabled) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'ph',
                             render: function(data) {
-                                return `<span class="${(data < 5.0 || data > 8) ? 'warning-value' : ''}">${data}</span>`;
+                                const isWarning = data < 5.0 || data > 8;
+                                return `<span class="${(isWarning && warningsEnabled) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'nitrogen',
                             render: function(data) {
-                                return `<span class="${(data < 100 || data > 400) ? 'warning-value' : ''}">${data}</span>`;
+                                const isWarning = data < 100 || data > 400;
+                                return `<span class="${(isWarning && warningsEnabled) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'phosphorus',
                             render: function(data) {
-                                return `<span class="${(data < 20 || data > 80) ? 'warning-value' : ''}">${data}</span>`;
+                                const isWarning = data < 20 || data > 80;
+                                return `<span class="${(isWarning && warningsEnabled) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
                             data: 'potassium',
                             render: function(data) {
-                                return `<span class="${(data < 100 || data > 400) ? 'warning-value' : ''}">${data}</span>`;
+                                const isWarning = data < 100 || data > 400;
+                                return `<span class="${(isWarning && warningsEnabled) ? 'warning-value' : ''}">${data}</span>`;
                             }
                         },
                         { 
