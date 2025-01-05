@@ -31,7 +31,7 @@
                     <i class="fas fa-seedling"></i> Vùng Trồng
                 </a>
                 <a href="/devices">
-                    <i class="fas fa-microchip"></i> API key
+                    <i class="fas fa-key"></i> API key
                 </a>
                 <a href="/logout">
                     <i class="fas fa-sign-out-alt"></i> Đăng xuất
@@ -40,17 +40,17 @@
         </nav>
 
         <div class="page-header">
-            <h1>Biểu Đồ Số Liệu</h1>
+            <h1><strong>Biểu Đồ Dữ Liệu</strong></h1>
         </div>
 
         <div class="row">
             <div class="col-12">
-                <div class="date-selection">
-                    <span>Chọn từ ngày: </span>
-                    <input type="date" id="fromDate" name="fromDate">
-                    <span>Chọn tới ngày: </span>
-                    <input type="date" id="toDate" name="toDate">
-                    <button type="button" id="updateChartButton">Update Chart</button>
+                <div class="date-selection" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                    <span style="white-space: nowrap;">Chọn từ ngày: </span>
+                    <input type="date" id="fromDate" name="fromDate" style="width: 140px; border: 1px solid #ced4da; border-radius: 4px; padding: 6px 12px;">
+                    <span style="white-space: nowrap;">Chọn tới ngày: </span>
+                    <input type="date" id="toDate" name="toDate" style="width: 140px; border: 1px solid #ced4da; border-radius: 4px; padding: 6px 12px;">
+                    <button type="button" id="updateChartButton" class="btn btn-primary" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">Lọc dữ liệu</button>
                 </div>
             </div>
         </div>
@@ -109,9 +109,6 @@
             </div>
         </div>
 
-        <div class="footer">
-            <p>© 2024 Sensor Data Dashboard</p>
-        </div>
     </div>
 
     <script>
