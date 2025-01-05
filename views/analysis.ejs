@@ -246,55 +246,48 @@ function displayAnalysis(data) {
         </div>
     `;
 
-    // Display recommendations and fertilizer calculations
+    // Display recommendations
     recommendations.innerHTML = `
         <div class="mb-4">
             <h5>Đề xuất cải thiện</h5>
-            <ul class="list-group list-group-flush">
-                ${data.recommendations.map(rec => `
-                    <li class="list-group-item">
-                        <i class="fas fa-info-circle text-primary me-2"></i>
-                        ${rec}
-                    </li>
-                `).join('')}
-            </ul>
-        </div>
-
-        ${data.fertilizer_calculations && Object.keys(data.fertilizer_calculations).length > 0 ? `
-            <div class="mt-3">
-                <h5>Tính toán phân bón</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Loại</th>
-                                <th>Lượng cần bổ sung</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.fertilizer_calculations.n ? `
-                                <tr>
-                                    <td>Phân đạm (N)</td>
-                                    <td>${data.fertilizer_calculations.n} kg</td>
-                                </tr>
-                            ` : ''}
-                            ${data.fertilizer_calculations.p ? `
-                                <tr>
-                                    <td>Phân lân (P)</td>
-                                    <td>${data.fertilizer_calculations.p} kg</td>
-                                </tr>
-                            ` : ''}
-                            ${data.fertilizer_calculations.k ? `
-                                <tr>
-                                    <td>Phân kali (K)</td>
-                                    <td>${data.fertilizer_calculations.k} kg</td>
-                                </tr>
-                            ` : ''}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="list-group">
+                ${data.recommendations.map(rec => {
+                    const [title, ...bullets] = rec.split('Đề xuất:');
+                    return `
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 align-items-start">
+                                <i class="fas fa-leaf text-success me-3 mt-1"></i>
+                                <div>
+                                    <div class="fw-bold mb-2">${title.trim()}</div>
+                                    ${bullets.length > 0 ? `
+                                        <ul class="list-unstyled mb-0">
+                                            ${bullets[0].split('-')
+                                                .filter(bullet => bullet.trim())
+                                                .map(bullet => `
+                                                    <li class="mb-1">
+                                                        <i class="fas fa-angle-right text-success me-2"></i>
+                                                        ${bullet.trim()}
+                                                    </li>
+                                                `).join('')}
+                                        </ul>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                ${data.recommendations.length === 0 ? `
+                    <div class="list-group-item text-success">
+                        <div class="d-flex w-100 align-items-center">
+                            <i class="fas fa-check-circle me-3"></i>
+                            <div>
+                                <strong>Tất cả các chỉ số đều trong ngưỡng tối ưu</strong>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
             </div>
-        ` : ''}
+        </div>
     `;
 }
 

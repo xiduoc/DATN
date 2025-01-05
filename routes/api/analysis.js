@@ -65,57 +65,70 @@ function determineNutrientLevel(value, minValue, maxValue) {
     return 'optimal';
 }
 
-// Helper function to calculate fertilizer recommendations
-function calculateFertilizerAmount(current, min, max, area) {
-    const target = (max + min) / 2;
-    const deficit = Math.max(0, target - current);
-    // Convert to kg/ha and adjust for area
-    return Math.round((deficit * 2 * (area / 10000)) * 10) / 10;
-}
-
 // Helper function to generate recommendations based on analysis
-function generateRecommendations(npkLevels, phLevel, currentRatio, cropParams, area) {
+function generateRecommendations(npkLevels, phLevel, currentRatio, cropParams) {
     const recommendations = [];
-    const fertilizers = {};
 
     // pH recommendations
     if (phLevel < cropParams.ph.min) {
-        const phDiff = cropParams.ph.min - phLevel;
-        recommendations.push(`pH thấp (${phLevel.toFixed(1)}): Cần bổ sung ${Math.round(phDiff * 1000)} kg/ha vôi để tăng độ pH lên ${cropParams.ph.min}`);
+        recommendations.push(`Độ pH (${phLevel.toFixed(1)}) thấp hơn mức tối thiểu (${cropParams.ph.min}). Đề xuất:
+        - Bổ sung vôi nông nghiệp để tăng độ pH
+        - Tăng cường bón phân hữu cơ đã hoai mục
+        - Cải thiện thoát nước nếu đất quá ẩm`);
     } else if (phLevel > cropParams.ph.max) {
-        recommendations.push(`pH cao (${phLevel.toFixed(1)}): Cân nhắc sử dụng phân bón acid hoặc lưu huỳnh để giảm pH xuống ${cropParams.ph.max}`);
+        recommendations.push(`Độ pH (${phLevel.toFixed(1)}) cao hơn mức tối đa (${cropParams.ph.max}). Đề xuất:
+        - Bổ sung lưu huỳnh nông nghiệp để giảm pH
+        - Sử dụng phân bón sinh học
+        - Tăng cường bón phân hữu cơ để cân bằng pH`);
     }
 
-    // NPK recommendations and calculations
+    // NPK recommendations
     if (npkLevels.nitrogen === 'low') {
-        const amount = calculateFertilizerAmount(npkLevels.n_value, cropParams.npk.min_n, cropParams.npk.max_n, area);
-        fertilizers.n = amount;
-        recommendations.push(`Nitrogen thấp: Bổ sung ${amount} kg phân đạm (N) cho ${area}m². Có thể dùng urê (46%N) hoặc NPK tỷ lệ cao đạm`);
+        recommendations.push(`Hàm lượng Nitrogen (${npkLevels.n_value.toFixed(1)}) thấp hơn mức tối thiểu (${cropParams.npk.min_n}). Đề xuất:
+        - Bổ sung phân đạm hữu cơ
+        - Trồng xen cây họ đậu để cải thiện đạm tự nhiên
+        - Bổ sung phân chuồng hoai mục`);
+    } else if (npkLevels.nitrogen === 'high') {
+        recommendations.push(`Hàm lượng Nitrogen (${npkLevels.n_value.toFixed(1)}) cao hơn mức tối đa (${cropParams.npk.max_n}). Đề xuất:
+        - Giảm lượng phân đạm trong đợt bón tiếp theo
+        - Tăng tưới nước để giảm nồng độ đạm
+        - Trồng xen các cây cần nhiều đạm`);
     }
+
     if (npkLevels.phosphorus === 'low') {
-        const amount = calculateFertilizerAmount(npkLevels.p_value, cropParams.npk.min_p, cropParams.npk.max_p, area);
-        fertilizers.p = amount;
-        recommendations.push(`Phosphorus thấp: Bổ sung ${amount} kg phân lân (P) cho ${area}m². Có thể dùng super phosphate (16%P) hoặc NPK tỷ lệ cao lân`);
+        recommendations.push(`Hàm lượng Phosphorus (${npkLevels.p_value.toFixed(1)}) thấp hơn mức tối thiểu (${cropParams.npk.min_p}). Đề xuất:
+        - Bổ sung phân lân hữu cơ
+        - Bón vôi để tăng khả năng hấp thu lân
+        - Bổ sung phân chuồng đã ủ hoai`);
+    } else if (npkLevels.phosphorus === 'high') {
+        recommendations.push(`Hàm lượng Phosphorus (${npkLevels.p_value.toFixed(1)}) cao hơn mức tối đa (${cropParams.npk.max_p}). Đề xuất:
+        - Giảm lượng phân lân trong đợt bón tiếp theo
+        - Trồng xen các cây cần nhiều lân
+        - Cải thiện thoát nước nếu đất quá ẩm`);
     }
+
     if (npkLevels.potassium === 'low') {
-        const amount = calculateFertilizerAmount(npkLevels.k_value, cropParams.npk.min_k, cropParams.npk.max_k, area);
-        fertilizers.k = amount;
-        recommendations.push(`Potassium thấp: Bổ sung ${amount} kg phân kali (K) cho ${area}m². Có thể dùng kali clorua (60%K) hoặc NPK tỷ lệ cao kali`);
+        recommendations.push(`Hàm lượng Potassium (${npkLevels.k_value.toFixed(1)}) thấp hơn mức tối thiểu (${cropParams.npk.min_k}). Đề xuất:
+        - Bổ sung phân kali hữu cơ
+        - Bổ sung tro bếp (giàu kali)
+        - Bón phân chuồng hoai mục`);
+    } else if (npkLevels.potassium === 'high') {
+        recommendations.push(`Hàm lượng Potassium (${npkLevels.k_value.toFixed(1)}) cao hơn mức tối đa (${cropParams.npk.max_k}). Đề xuất:
+        - Giảm lượng phân kali trong đợt bón tiếp theo
+        - Tăng tưới nước để giảm nồng độ kali
+        - Trồng xen các cây cần nhiều kali`);
     }
 
     // Balance recommendations
     const targetRatio = cropParams.ratio;
-    if (currentRatio && targetRatio) {
-        recommendations.push(`Tỷ lệ NPK hiện tại là ${currentRatio} (Mục tiêu: ${targetRatio})`);
-        if (currentRatio !== targetRatio) {
-            recommendations.push('Khuyến nghị điều chỉnh phân bón để đạt tỷ lệ NPK phù hợp với loại cây trồng');
-        }
+    if (currentRatio && targetRatio && currentRatio !== targetRatio) {
+        recommendations.push(`Tỷ lệ NPK hiện tại (${currentRatio}) chưa đạt tỷ lệ tối ưu (${targetRatio}). Đề xuất:
+        - Điều chỉnh lượng phân bón theo tỷ lệ mục tiêu
+        - Ưu tiên sử dụng phân bón tổng hợp có tỷ lệ NPK phù hợp
+        - Theo dõi sự phát triển của cây để điều chỉnh kịp thời`);
     }
 
-    return {
-        recommendations,
-        fertilizers
-    };
+    return recommendations;
 }
 
 // Get NPK and pH analysis
@@ -246,17 +259,13 @@ router.get('/npk-ph', authenticateUser, async (req, res) => {
             }
         };
 
-        // Generate recommendations and fertilizer calculations
-        const { recommendations, fertilizers } = generateRecommendations(
+        // Generate recommendations
+        analysis.recommendations = generateRecommendations(
             npkLevels,
             reading.avg_ph,
             currentRatio ? currentRatio.ratio : null,
-            cropParams,
-            area
+            cropParams
         );
-
-        analysis.recommendations = recommendations;
-        analysis.fertilizer_calculations = fertilizers;
 
         res.json(analysis);
     } catch (error) {
