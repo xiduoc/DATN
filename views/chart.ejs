@@ -56,7 +56,7 @@
         </div>
 
         <div class="row mb-4">
-            <div class="col">
+            <div class="col-md-8">
                 <h5 class="mb-3">Chọn dữ liệu để hiển thị</h5>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" id="tempCheckBox" checked>
@@ -87,6 +87,16 @@
                     <label class="form-check-label" for="kCheckBox">Kali</label>
                 </div>
             </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" id="lineChartBtn">
+                        <i class="fas fa-chart-line"></i> Biểu đồ đường
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="barChartBtn">
+                        <i class="fas fa-chart-bar"></i> Biểu đồ cột
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="row">
@@ -113,6 +123,7 @@
 
     <script>
         let charts = {};
+        let currentChartType = 'line';
         let dataBuffer = {
             tempHumid: [],
             phCond: [],
@@ -201,7 +212,7 @@
 
         function initCharts() {
             charts.tempHumid = new Chart(document.getElementById('tempHumidChart'), {
-                type: 'line',
+                type: currentChartType,
                 data: {
                     labels: [],
                     datasets: [
@@ -250,7 +261,7 @@
             });
 
             charts.phCond = new Chart(document.getElementById('phCondChart'), {
-                type: 'line',
+                type: currentChartType,
                 data: {
                     labels: [],
                     datasets: [
@@ -301,7 +312,7 @@
             });
 
             charts.npk = new Chart(document.getElementById('npkChart'), {
-                type: 'line',
+                type: currentChartType,
                 data: {
                     labels: [],
                     datasets: [
@@ -455,7 +466,45 @@
             document.getElementById('updateChartButton').addEventListener('click', () => {
                 fetchData(true); // Load filtered data
             });
+
+            // Handle chart type toggle
+            document.getElementById('lineChartBtn').addEventListener('click', () => {
+                if (currentChartType !== 'line') {
+                    currentChartType = 'line';
+                    updateChartType();
+                    document.getElementById('lineChartBtn').classList.add('active');
+                    document.getElementById('barChartBtn').classList.remove('active');
+                }
+            });
+
+            document.getElementById('barChartBtn').addEventListener('click', () => {
+                if (currentChartType !== 'bar') {
+                    currentChartType = 'bar';
+                    updateChartType();
+                    document.getElementById('barChartBtn').classList.add('active');
+                    document.getElementById('lineChartBtn').classList.remove('active');
+                }
+            });
         });
+
+        function updateChartType() {
+            Object.values(charts).forEach(chart => {
+                chart.config.type = currentChartType;
+                
+                // Update dataset styles based on chart type
+                chart.data.datasets.forEach(dataset => {
+                    if (currentChartType === 'bar') {
+                        dataset.backgroundColor = dataset.borderColor;
+                        dataset.borderWidth = 1;
+                    } else {
+                        dataset.backgroundColor = undefined;
+                        dataset.borderWidth = 2;
+                    }
+                });
+                
+                chart.update('none');
+            });
+        }
     </script>
 </body>
 </html>
