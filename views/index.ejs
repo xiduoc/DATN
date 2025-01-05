@@ -100,6 +100,28 @@
             padding: 20px;
             font-size: 18px;
         }
+        .date-selection {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .date-selection button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #showData, #exportBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .date-selection .add-btn {
+            margin-bottom: 0;
+        }
+        .date-selection .warning-toggle {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -135,20 +157,17 @@
         </div>
 
         <div class="date-selection">
-            <span>Select From Date: </span>
+            <span>Chọn từ ngày: </span>
             <input type="date" id="fromDate" name="fromDate">
-            <span>Select To Date: </span>
+            <span>Chọn tới ngày: </span>
             <input type="date" id="toDate" name="toDate">
-            <button type="button" id="showData">Show Data</button>
-            <button type="button" id="exportBtn">Export</button>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <button type="button" id="showData">Lọc dữ liệu</button>
+            <button type="button" id="exportBtn">Xuất dữ liệu</button>
             <button class="add-btn" onclick="openAddModal()">
-                <i class="fas fa-plus"></i> Add New Data
+                <i class="fas fa-plus"></i> Thêm dữ liệu
             </button>
             <button class="warning-toggle disabled" id="warningToggle">
-                <i class="fas fa-exclamation-triangle"></i> Warnings
+                <i class="fas fa-exclamation-triangle"></i> Cảnh báo
             </button>
         </div>
 
@@ -383,13 +402,13 @@
                     lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, 'All']],
                     order: [[0, 'desc']],
                     language: {
-                        lengthMenu: "Show _MENU_ entries per page",
-                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        lengthMenu: "Hiển thị _MENU_ mục mỗi trang",
+                        info: "Hiển thị _START_ tới _END_ của _TOTAL_ mục",
                         paginate: {
                             first: "First",
                             last: "Last",
-                            next: "Next",
-                            previous: "Previous"
+                            next: "Sau",
+                            previous: "Trước"
                         },
                         search: "Search:",
                         zeroRecords: "No matching records found"

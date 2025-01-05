@@ -40,15 +40,15 @@
         </nav>
 
         <div class="page-header">
-            <h1>Data Chart</h1>
+            <h1>Biểu Đồ Số Liệu</h1>
         </div>
 
         <div class="row">
             <div class="col-12">
                 <div class="date-selection">
-                    <span>Select From Date: </span>
+                    <span>Chọn từ ngày: </span>
                     <input type="date" id="fromDate" name="fromDate">
-                    <span>Select To Date: </span>
+                    <span>Chọn tới ngày: </span>
                     <input type="date" id="toDate" name="toDate">
                     <button type="button" id="updateChartButton">Update Chart</button>
                 </div>
@@ -57,7 +57,7 @@
 
         <div class="row mb-4">
             <div class="col">
-                <h5 class="mb-3">Select Data to Display</h5>
+                <h5 class="mb-3">Chọn dữ liệu để hiển thị</h5>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" id="tempCheckBox" checked>
                     <label class="form-check-label" for="tempCheckBox">Nhiệt độ (°C)</label>
@@ -76,15 +76,15 @@
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" id="nCheckBox" checked>
-                    <label class="form-check-label" for="nCheckBox">Nitrogen</label>
+                    <label class="form-check-label" for="nCheckBox">Nito</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" id="pCheckBox" checked>
-                    <label class="form-check-label" for="pCheckBox">Phosphorus</label>
+                    <label class="form-check-label" for="pCheckBox">Photpho</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" id="kCheckBox" checked>
-                    <label class="form-check-label" for="kCheckBox">Potassium</label>
+                    <label class="form-check-label" for="kCheckBox">Kali</label>
                 </div>
             </div>
         </div>
@@ -309,21 +309,21 @@
                     labels: [],
                     datasets: [
                         {
-                            label: 'Nitrogen',
+                            label: 'Nito',
                             borderColor: '#ff9f40',
                             tension: 0.4,
                             borderWidth: 2,
                             hidden: !document.getElementById('nCheckBox').checked
                         },
                         {
-                            label: 'Phosphorus',
+                            label: 'Photpho',
                             borderColor: '#ffcd56',
                             tension: 0.4,
                             borderWidth: 2,
                             hidden: !document.getElementById('pCheckBox').checked
                         },
                         {
-                            label: 'Potassium',
+                            label: 'Kali',
                             borderColor: '#4bc0c0',
                             tension: 0.4,
                             borderWidth: 2,
