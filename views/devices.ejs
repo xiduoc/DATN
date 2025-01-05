@@ -2,43 +2,63 @@
 <html>
 <head>
     <title>My Devices</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <div class="container">
         <nav class="navigation">
-            <a href="/">Home</a>
-            <a href="/chart">Charts</a>
-            <a href="/map">Map</a>
-            <a href="/growing-areas">Growing Areas</a>
-            <a href="/devices">Devices and API Key</a>
-            <a href="/logout" style="color: #c74b58;">Logout</a>
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="/">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/chart">
+                    <i class="fas fa-chart-line"></i> Biểu Đồ
+                </a>
+                <a href="/map">
+                    <i class="fas fa-map-marker-alt"></i> Bản Đồ
+                </a>
+                <a href="/growing-areas">
+                    <i class="fas fa-seedling"></i> Vùng Trồng
+                </a>
+                <a href="/devices">
+                    <i class="fas fa-microchip"></i> API key
+                </a>
+                <a href="/logout">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất 
+                </a>
+            </div>
         </nav>
-        
-        <h1>Devices and API Key</h1>
+
+        <div class="page-header">
+            <h1>API Key</h1>
+        </div>
         
         <div class="add-device">
-            <h3>Add New Device</h3>
+            <h3>Tạo API key mới</h3>
             <form action="/devices/new" method="POST">
                 <div class="form-group">
-                    <label for="name">Device Name:</label>
+                    <label for="name">Tên API key:</label>
                     <input type="text" id="name" name="name" required>
                 </div>
-                <button type="submit">Generate API Key</button>
+                <button type="submit">Xác nhận tạo API Key</button>
             </form>
         </div>
 
         <div class="devices-list">
-            <h3>Your Devices</h3>
+            <h3>Tất cả API key đã tạo</h3>
             <% if (devices && devices.length > 0) { %>
                 <table>
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>Tên</th>
                             <th>API Key</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
+                            <th>Trạng thái</th>
+                            <th>Tạo</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,13 +88,13 @@
         </div>
 
         <div class="api-instructions">
-            <h3>How to Use Your API Key</h3>
-            <p>Method 1 - URL Parameter (for AT commands):</p>
+            <h3>Cách sử dụng API key của bạn</h3>
+            <p>Phương thức 1 - URL Parameter (for AT commands):</p>
             <pre>
         http://your-server/insert?api_key=your-api-key-here
             </pre>
             
-            <p>Example AT Command:</p>
+            <p>Ví dụ AT Command:</p>
             <pre>
         AT+HTTPPARA="URL","http://your-server/insert?api_key=your-api-key-here"
         AT+HTTPPARA="CONTENT","application/json"
@@ -120,6 +140,73 @@
             padding: 20px;
             background: #f9f9f9;
             border-radius: 8px;
+        }
+        /* Heading styles */
+        .devices-list h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* Table styles */
+        .devices-list table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .devices-list th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+        /* Center align specific column headers */
+        .devices-list th:nth-child(3),
+        .devices-list th:nth-child(4),
+        .devices-list th:nth-child(5) {
+            text-align: center;
+        }
+        .devices-list td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+        /* Status column */
+        .devices-list td:nth-child(3) {
+            text-align: center;
+            text-transform: capitalize;
+            padding: 12px 20px;
+        }
+        /* Creation date column */
+        .devices-list td:nth-child(4) {
+            text-align: center;
+            white-space: nowrap;
+            padding: 12px 20px;
+        }
+        /* Action column */
+        .devices-list td:nth-child(5) {
+            text-align: center;
+            padding: 12px 20px;
+        }
+        .deactivate-btn, .activate-btn {
+            padding: 6px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        .deactivate-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .deactivate-btn:hover {
+            background-color: #c82333;
+        }
+        .activate-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .activate-btn:hover {
+            background-color: #218838;
         }
     </style>
 </body>

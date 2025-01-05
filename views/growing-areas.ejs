@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Quản lý vùng trồng</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/styles.css">
     <!-- Add TinyMCE CDN -->
     <script src="https://cdn.tiny.cloud/1/dx97kmirvma0cl2ja7xdzuddxi08g465lxnns9ruzw6vwej4/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
@@ -105,15 +106,34 @@
 <body>
     <div class="container">
         <nav class="navigation">
-            <a href="/">Home</a>
-            <a href="/chart">Charts</a>
-            <a href="/map">Map</a>
-            <a href="/growing-areas">Growing Areas</a>
-            <a href="/devices">Devices and API Key</a>
-            <a href="/logout" style="color: #c74b58;">Logout</a>
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="/">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/chart">
+                    <i class="fas fa-chart-line"></i> Biểu Đồ
+                </a>
+                <a href="/map">
+                    <i class="fas fa-map-marker-alt"></i> Bản Đồ
+                </a>
+                <a href="/growing-areas">
+                    <i class="fas fa-seedling"></i> Vùng Trồng
+                </a>
+                <a href="/devices">
+                    <i class="fas fa-microchip"></i> API key
+                </a>
+                <a href="/logout">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </a>
+            </div>
         </nav>
 
-        <h1>Growing Areas</h1>
+        <div class="page-header">
+            <h1>Vùng Trồng</h1>
+        </div>
 
         <!-- Add Form -->
         <div id="addForm" class="form-container">

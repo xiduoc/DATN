@@ -105,15 +105,34 @@
 <body>
     <div class="container">
         <nav class="navigation">
-            <a href="/">Home</a>
-            <a href="/chart">Charts</a>
-            <a href="/map">Map</a>
-            <a href="/growing-areas">Growing Areas</a>
-            <a href="/devices">Devices and API Key</a>
-            <a href="/logout" style="color: #c74b58;">Logout</a>
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="/">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/chart">
+                    <i class="fas fa-chart-line"></i> Biểu Đồ
+                </a>
+                <a href="/map">
+                    <i class="fas fa-map-marker-alt"></i> Bản Đồ
+                </a>
+                <a href="/growing-areas">
+                    <i class="fas fa-seedling"></i> Vùng Trồng
+                </a>
+                <a href="/devices">
+                    <i class="fas fa-microchip"></i> API key
+                </a>
+                <a href="/logout">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </a>
+            </div>
         </nav>
 
-        <h1>Data Table</h1>
+        <div class="page-header">
+            <h1>Bảng Dữ Liệu</h1>
+        </div>
 
         <div class="date-selection">
             <span>Select From Date: </span>
@@ -138,17 +157,17 @@
                 <thead>
                     <tr>
                         <th>Raw Timestamp</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Humidity</th>
-                        <th>Temperature</th>
-                        <th>Conductivity</th>
+                        <th>Ngày</th>
+                        <th>Giờ</th>
+                        <th>Độ ẩm</th>
+                        <th>Nhiệt độ</th>
+                        <th>Độ dẫn điện</th>
                         <th>pH</th>
-                        <th>Nitrogen</th>
-                        <th>Phosphorus</th>
-                        <th>Potassium</th>
-                        <th>Location</th>
-                        <th>Actions</th>
+                        <th>Nito</th>
+                        <th>Photpho</th>
+                        <th>Kali</th>
+                        <th>Vị trí</th>
+                        <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -208,6 +227,26 @@
         let dataTable;
 
         $(document).ready(function() {
+            // Mobile Navigation Toggle
+            $('.nav-toggle').click(function(e) {
+                e.stopPropagation();
+                $('.nav-links').toggleClass('active');
+            });
+
+            // Close mobile menu when clicking outside
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.navigation').length) {
+                    $('.nav-links').removeClass('active');
+                }
+            });
+
+            // Set active navigation item
+            $('.nav-links a').each(function() {
+                if ($(this).attr('href') === window.location.pathname) {
+                    $(this).addClass('active');
+                }
+            });
+
             let warningsEnabled = false;
 
             // Warning toggle functionality
