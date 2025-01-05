@@ -390,7 +390,32 @@ document.getElementById('analysisForm').addEventListener('submit', async (e) => 
         // Get trends
         const trendsResponse = await fetch(`/api/analysis/npk-ph/trends?${params}`);
         const trendsData = await trendsResponse.json();
-        updateTrendsChart(trendsData);
+        console.log('Trends data:', trendsData);
+        if (Array.isArray(trendsData) && trendsData.length > 0) {
+            updateTrendsChart(trendsData);
+        } else {
+            console.log('No trend data available');
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            if (trendsChart) {
+                trendsChart.destroy();
+            }
+            trendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Không có dữ liệu cho khoảng thời gian này'
+                        }
+                    }
+                }
+            });
+        }
     } catch (error) {
         console.error('Error fetching analysis:', error);
         alert('Có lỗi xảy ra khi tải dữ liệu phân tích');

@@ -273,15 +273,13 @@ router.get('/npk-ph/trends', authenticateUser, async (req, res) => {
         // Get historical trends
         const trends = await query(`
             SELECT 
-                DATE_FORMAT(r.created_at, 
-                    CASE ?
-                        WHEN 'hour' THEN '%Y-%m-%d %H:00'
-                        WHEN 'day' THEN '%Y-%m-%d'
-                        WHEN 'week' THEN '%Y-%u'
-                        WHEN 'month' THEN '%Y-%m'
-                        ELSE '%Y-%m'
-                    END
-                ) as period,
+                CASE ?
+                    WHEN 'hour' THEN DATE_FORMAT(r.created_at, '%Y-%m-%d %H:00')
+                    WHEN 'day' THEN DATE_FORMAT(r.created_at, '%Y-%m-%d')
+                    WHEN 'week' THEN DATE_FORMAT(r.created_at, '%Y-%u')
+                    WHEN 'month' THEN DATE_FORMAT(r.created_at, '%Y-%m')
+                    ELSE DATE_FORMAT(r.created_at, '%Y-%m-%d')
+                END as period,
                 AVG(r.nitrogen) as avg_nitrogen,
                 AVG(r.phosphorus) as avg_phosphorus,
                 AVG(r.potassium) as avg_potassium,
@@ -291,17 +289,9 @@ router.get('/npk-ph/trends', authenticateUser, async (req, res) => {
             WHERE (d.user_id = ? OR r.user_id = ?)
                 ${location ? 'AND r.location = ?' : ''}
                 AND r.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY DATE_FORMAT(r.created_at, 
-                    CASE ?
-                        WHEN 'hour' THEN '%Y-%m-%d %H:00'
-                        WHEN 'day' THEN '%Y-%m-%d'
-                        WHEN 'week' THEN '%Y-%u'
-                        WHEN 'month' THEN '%Y-%m'
-                        ELSE '%Y-%m'
-                    END
-                )
+            GROUP BY period
             ORDER BY period DESC
-        `, [interval, interval, req.user.id, req.user.id, ...(location ? [location] : []), days]);
+        `, [interval, req.user.id, req.user.id, ...(location ? [location] : []), days]);
 
         res.json(trends);
     } catch (error) {
