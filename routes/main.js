@@ -18,4 +18,9 @@ router.get('/chart', authenticateUser, (req, res) => {
     res.render('chart');
 });
 
+// Analysis view
+router.get('/analysis', authenticateUser, (req, res) => {
+    res.render('analysis');
+});
+
 export default router;

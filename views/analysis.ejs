@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân tích NPK và pH</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="navigation">
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="/">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/chart">
+                    <i class="fas fa-chart-line"></i> Biểu Đồ
+                </a>
+                <a href="/map">
+                    <i class="fas fa-map-marker-alt"></i> Bản Đồ
+                </a>
+                <a href="/growing-areas">
+                    <i class="fas fa-seedling"></i> Vùng Trồng
+                </a>
+                <a href="/devices">
+                    <i class="fas fa-key"></i> API key
+                </a>
+                <a href="/logout">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </a>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+    <h2>Phân tích NPK và pH</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Bộ lọc
+                </div>
+                <div class="card-body">
+                    <form id="analysisForm">
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Vị trí</label>
+                            <select class="form-select" id="location" name="location">
+                                <option value="">Tất cả vị trí</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="days" class="form-label">Khoảng thời gian (ngày)</label>
+                            <input type="number" class="form-control" id="days" name="days" value="7" min="1" max="90">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Phân tích</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Current Analysis -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    Phân tích hiện tại
+                </div>
+                <div class="card-body">
+                    <div id="currentAnalysis">
+                        <div class="text-center">
+                            <p class="text-muted">Chọn vị trí và khoảng thời gian để xem phân tích</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    Đề xuất cải thiện
+                </div>
+                <div class="card-body">
+                    <div id="recommendations">
+                        <div class="text-center">
+                            <p class="text-muted">Đề xuất sẽ hiển thị sau khi phân tích</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Trends -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    Xu hướng theo thời gian
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let trendsChart = null;
+
+// Load locations
+async function loadLocations() {
+    try {
+        const response = await fetch('/api/data/map');
+        const data = await response.json();
+        const locationSelect = document.getElementById('location');
+        const uniqueLocations = [...new Set(data.map(item => item.location))];
+        
+        uniqueLocations.forEach(location => {
+            if (location) {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationSelect.appendChild(option);
+            }
+        });
+    } catch (error) {
+        console.error('Error loading locations:', error);
+    }
+}
+
+// Format analysis results
+function displayAnalysis(data) {
+    const currentAnalysis = document.getElementById('currentAnalysis');
+    const recommendations = document.getElementById('recommendations');
+
+    // Display current analysis
+    currentAnalysis.innerHTML = `
+        <div class="mb-4">
+            <h5>Thông tin chung</h5>
+            <p>Vị trí: ${data.location}</p>
+            <p>Thời gian: ${data.period}</p>
+            <p>Số lượng đo: ${data.readings}</p>
+            ${data.crop_info ? `
+                <div class="alert alert-info">
+                    <h6>Thông tin cây trồng</h6>
+                    <p class="mb-1">Loại cây: ${data.crop_info.type}</p>
+                    <p class="mb-1">Diện tích: ${data.crop_info.area}m²</p>
+                    <p class="mb-0">Tỷ lệ NPK tối ưu: ${data.crop_info.optimal_ratio}</p>
+                </div>
+            ` : ''}
+        </div>
+
+        <div class="mb-3">
+            <h5>Nitrogen (N)</h5>
+            <div class="progress mb-2">
+                <div class="progress-bar ${getProgressBarClass(data.current.nitrogen.level)}" 
+                     role="progressbar" 
+                     style="width: ${getProgressWidth(data.current.nitrogen.value, data.current.nitrogen.optimal_range.max * 1.5)}%" 
+                     aria-valuenow="${data.current.nitrogen.value}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="${data.current.nitrogen.optimal_range.max * 1.5}">
+                    ${data.current.nitrogen.value.toFixed(2)}
+                </div>
+            </div>
+            <small class="text-muted">
+                Mức: ${translateLevel(data.current.nitrogen.level)} | 
+                Khoảng tối ưu: ${data.current.nitrogen.optimal_range.min} - ${data.current.nitrogen.optimal_range.max}
+            </small>
+        </div>
+
+        <div class="mb-3">
+            <h5>Phosphorus (P)</h5>
+            <div class="progress mb-2">
+                <div class="progress-bar ${getProgressBarClass(data.current.phosphorus.level)}" 
+                     role="progressbar" 
+                     style="width: ${getProgressWidth(data.current.phosphorus.value, data.current.phosphorus.optimal_range.max * 1.5)}%" 
+                     aria-valuenow="${data.current.phosphorus.value}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="${data.current.phosphorus.optimal_range.max * 1.5}">
+                    ${data.current.phosphorus.value.toFixed(2)}
+                </div>
+            </div>
+            <small class="text-muted">
+                Mức: ${translateLevel(data.current.phosphorus.level)} | 
+                Khoảng tối ưu: ${data.current.phosphorus.optimal_range.min} - ${data.current.phosphorus.optimal_range.max}
+            </small>
+        </div>
+
+        <div class="mb-3">
+            <h5>Potassium (K)</h5>
+            <div class="progress mb-2">
+                <div class="progress-bar ${getProgressBarClass(data.current.potassium.level)}" 
+                     role="progressbar" 
+                     style="width: ${getProgressWidth(data.current.potassium.value, data.current.potassium.optimal_range.max * 1.5)}%" 
+                     aria-valuenow="${data.current.potassium.value}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="${data.current.potassium.optimal_range.max * 1.5}">
+                    ${data.current.potassium.value.toFixed(2)}
+                </div>
+            </div>
+            <small class="text-muted">
+                Mức: ${translateLevel(data.current.potassium.level)} | 
+                Khoảng tối ưu: ${data.current.potassium.optimal_range.min} - ${data.current.potassium.optimal_range.max}
+            </small>
+        </div>
+
+        <div class="mb-3">
+            <h5>pH</h5>
+            <div class="progress mb-2">
+                <div class="progress-bar ${getProgressBarClass(data.current.ph.level)}" 
+                     role="progressbar" 
+                     style="width: ${(data.current.ph.value / 14) * 100}%" 
+                     aria-valuenow="${data.current.ph.value}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="14">
+                    ${data.current.ph.value.toFixed(2)}
+                </div>
+            </div>
+            <small class="text-muted">
+                Mức: ${translateLevel(data.current.ph.level)} | 
+                Khoảng tối ưu: ${data.current.ph.optimal_range.min} - ${data.current.ph.optimal_range.max}
+            </small>
+        </div>
+
+        ${data.current.npk_ratio ? `
+        <div class="mb-3">
+            <h5>Tỷ lệ NPK</h5>
+            <div class="alert ${data.current.npk_ratio === data.crop_info?.optimal_ratio ? 'alert-success' : 'alert-warning'}">
+                <p class="mb-1">Hiện tại: ${data.current.npk_ratio}</p>
+                ${data.crop_info ? `<p class="mb-0">Mục tiêu: ${data.crop_info.optimal_ratio}</p>` : ''}
+            </div>
+        </div>
+        ` : ''}
+        </div>
+    `;
+
+    // Display recommendations and fertilizer calculations
+    recommendations.innerHTML = `
+        <div class="mb-4">
+            <h5>Đề xuất cải thiện</h5>
+            <ul class="list-group list-group-flush">
+                ${data.recommendations.map(rec => `
+                    <li class="list-group-item">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        ${rec}
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+
+        ${data.fertilizer_calculations && Object.keys(data.fertilizer_calculations).length > 0 ? `
+            <div class="mt-3">
+                <h5>Tính toán phân bón</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Loại</th>
+                                <th>Lượng cần bổ sung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.fertilizer_calculations.n ? `
+                                <tr>
+                                    <td>Phân đạm (N)</td>
+                                    <td>${data.fertilizer_calculations.n} kg</td>
+                                </tr>
+                            ` : ''}
+                            ${data.fertilizer_calculations.p ? `
+                                <tr>
+                                    <td>Phân lân (P)</td>
+                                    <td>${data.fertilizer_calculations.p} kg</td>
+                                </tr>
+                            ` : ''}
+                            ${data.fertilizer_calculations.k ? `
+                                <tr>
+                                    <td>Phân kali (K)</td>
+                                    <td>${data.fertilizer_calculations.k} kg</td>
+                                </tr>
+                            ` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
+// Update trends chart
+function updateTrendsChart(data) {
+    const ctx = document.getElementById('trendsChart').getContext('2d');
+    
+    if (trendsChart) {
+        trendsChart.destroy();
+    }
+
+    trendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.period),
+            datasets: [
+                {
+                    label: 'Nitrogen',
+                    data: data.map(d => d.avg_nitrogen),
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Phosphorus',
+                    data: data.map(d => d.avg_phosphorus),
+                    borderColor: 'rgb(54, 162, 235)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Potassium',
+                    data: data.map(d => d.avg_potassium),
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                },
+                {
+                    label: 'pH',
+                    data: data.map(d => d.avg_ph),
+                    borderColor: 'rgb(153, 102, 255)',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Helper functions
+function getProgressBarClass(level) {
+    switch (level) {
+        case 'low': return 'bg-warning';
+        case 'medium': return 'bg-success';
+        case 'high': return 'bg-danger';
+        default: return 'bg-primary';
+    }
+}
+
+function getProgressWidth(value, max) {
+    return (value / max) * 100;
+}
+
+function translateLevel(level) {
+    switch (level) {
+        case 'low': return 'Thấp';
+        case 'medium': return 'Trung bình';
+        case 'high': return 'Cao';
+        default: return level;
+    }
+}
+
+// Form submission handler
+document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const params = new URLSearchParams();
+    
+    for (let [key, value] of formData.entries()) {
+        if (value) params.append(key, value);
+    }
+
+    try {
+        // Get current analysis
+        const analysisResponse = await fetch(`/api/analysis/npk-ph?${params}`);
+        const analysisData = await analysisResponse.json();
+        displayAnalysis(analysisData);
+
+        // Get trends
+        const trendsResponse = await fetch(`/api/analysis/npk-ph/trends?${params}`);
+        const trendsData = await trendsResponse.json();
+        updateTrendsChart(trendsData);
+    } catch (error) {
+        console.error('Error fetching analysis:', error);
+        alert('Có lỗi xảy ra khi tải dữ liệu phân tích');
+    }
+});
+
+// Load locations on page load
+document.addEventListener('DOMContentLoaded', loadLocations);
+</script>
+
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile Navigation Toggle
+        $(document).ready(function() {
+            $('.nav-toggle').click(function(e) {
+                e.stopPropagation();
+                $('.nav-links').toggleClass('active');
+            });
+
+            // Close mobile menu when clicking outside
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.navigation').length) {
+                    $('.nav-links').removeClass('active');
+                }
+            });
+
+            // Set active navigation item
+            $('.nav-links a').each(function() {
+                if ($(this).attr('href') === window.location.pathname) {
+                    $(this).addClass('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

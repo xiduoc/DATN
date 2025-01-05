@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.js';
 import deviceRoutes from './routes/devices.js';
 import growingAreaRoutes from './routes/growing-areas.js';
 import dataRoutes from './routes/api/data.js';
+import analysisRoutes from './routes/api/analysis.js';
 import mainRoutes from './routes/main.js';
 import adminRoutes from './routes/admin.js';
 
@@ -37,6 +38,7 @@ app.use('/', authRoutes);
 app.use('/devices', deviceRoutes);
 app.use('/growing-areas', growingAreaRoutes);
 app.use('/api/data', dataRoutes);
+app.use('/api/analysis', analysisRoutes);
 app.use('/admin', adminRoutes);
 
 // Initialize location updates
