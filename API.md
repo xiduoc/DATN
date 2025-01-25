@@ -327,3 +327,25 @@ CREATE TABLE devices (
 6. Excel export uses ExcelJS library for file generation
 7. Geographical coordinates (latitude/longitude) are optional
 8. All responses use JSON format except for file downloads
+
+## File .env
+# JWT Secrets
+JWT_SECRET=ad40e1eeaf00da552e4f850f32d4588052998ca5fd0a3b4f301dbf06a71309d2
+ADMIN_JWT_SECRET=7cd1bf02a58d0b633e7d6c6efe7e9338a362add1bef619cf13e694ffbce59219
+
+# Database Configuration
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=data
+DB_CONNECTION_LIMIT=10
+
+# Email Configuration
+EMAIL_SERVICE=gmail
+EMAIL_USER=myemail@gmail.com
+EMAIL_PASSWORD=yque cetf sdxo amqa 
+
+# Server Configuration
+PORT=3001
+NODE_ENV=development
+BASE_URL=https://data.nguyenhoangquan.id.vn
